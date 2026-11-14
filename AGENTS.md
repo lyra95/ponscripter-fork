@@ -23,13 +23,18 @@ installed for EP1–4; startup was observed and the user reported it working.
 - `rubyguard *clear_text_and_save_backlog` measures the next segment and calls
   the script callback if an existing page would overflow. It does not split
   an arbitrarily long single segment.
-- Current `getSavePath()` gives `STEAM` priority. `Steam_GetSavePath()` reads
-  `saveloc.txt`, otherwise tries the Steam install directory and script's
-  `local_savedir`, with a local fallback. `;localsave mysav` IS parsed.
-- macOS CMake defines `LOCAL_SAVEDIR`, but this branch does NOT force `saves/`
-  or give that define priority over `STEAM`. Do not describe the historical Mac
-  save-path fix as current code. That fix belongs to the earlier EP1–4 branch
-  and published Mac release. The current base has not been validated on macOS.
+- `getSavePath()` prioritizes `LOCAL_SAVEDIR`. macOS CMake defines it, so Mac
+  builds use `saves/` beside the app even with Steam enabled and a parsed
+  `;localsave mysav` header. This preserves existing saves and matches the
+  Mac Auto-Cloud rule observed in Steam logs. Do not create `saveloc.txt` here.
+- Windows Steam builds still use `Steam_GetSavePath()`: `saveloc.txt`, otherwise
+  the Steam install directory and script's `local_savedir`, with a local fallback.
+- The original Mac save-path override has been restored in the unified branch.
+  On 2026-11-15 the restored source built on arm64 Mac. A copied-app test
+  with Steam forced offline, the legacy header, no arguments and cwd `/` used
+  `saves/`; save/restart/load rendered identical frames. This is not a
+  Steam-connected or cross-computer sync test. Full-game validation remains
+  outstanding.
 - The Mac SDK dylib path is `osx/libsteam_api.dylib`.
 
 ## Build and installation

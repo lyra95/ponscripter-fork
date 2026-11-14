@@ -135,5 +135,7 @@ Different build hashes do not by themselves establish different engine behavior.
 The user previously reported answer-game play and rendering issues that prompted
 the fixes. This does not establish complete post-fix coverage. Full EP1–8 play,
 all save/load and language-switch paths, and the current source on macOS remain
-unverified. The historical Mac release uses the earlier EP1–4 source line and
-has a different save-path override; see `YOMIGANA.md` before building for Mac.
+unverified. The historical Mac release uses the earlier EP1–4 source line.
+Its `LOCAL_SAVEDIR` priority and `saves/` override have been restored in the
+current source; this does not change Windows Steam save handling.
+See `YOMIGANA.md` before building for Mac.

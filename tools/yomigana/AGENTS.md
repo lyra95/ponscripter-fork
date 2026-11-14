@@ -16,11 +16,11 @@ Read `docs/YOMIGANA.md` and `docs/WINDOWS_BUILD.md` for the current branch and
 validation limits. macOS binaries cannot run on Windows. Verify each game's
 actual save directory before installing or changing save-path behavior.
 
-The script's `;localsave mysav` is a parsed header directive. The historical
-Mac release and `backup/feat/japanese-ruby` force `saves/` beside the app to
-preserve existing progress. The current `feat/japanese-ruby` does not contain
-that override: Steam save handling has priority over `LOCAL_SAVEDIR`. Do not
-assume the current source reproduces the Mac release's save behavior.
+The script's `;localsave mysav` is a parsed header directive. Mac CMake defines
+`LOCAL_SAVEDIR`, which takes priority over Steam and forces `saves/` beside the
+app. The original Mac override is restored in the current branch to preserve
+existing progress and match the observed Steam Auto-Cloud path. Windows Steam
+save handling is unchanged; keep each installation's actual save configuration.
 Test default launches without `--root`, `--save` or `--script`, from cwd `/`, using
 a copied app layout with the real header and copied saves. Never run such tests
 against a user's live game directory.
