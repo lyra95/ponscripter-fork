@@ -85,5 +85,7 @@ Automatic readings still need contextual review.
 
 On 2026-11-14 the replayed EP1–4 ruby commits plus EP5–8 fixes built successfully
 again in MSYS2 MINGW32 with `./configure --steam && make -j2`. The output is PE
-i386 and the matching Win32 Steam SDK DLL was staged. This rebuild has not yet
-been installed or runtime-checked in the game folder.
+i386 and the matching Win32 Steam SDK DLL was staged. The rebuilt executable was
+installed to the answer game folder after backing up its prior executable, DLL,
+and `0.u`. The existing DLL already had the expected SHA256, and `0.u` remained
+unchanged. Runtime behavior after this rebuild has not yet been checked.
