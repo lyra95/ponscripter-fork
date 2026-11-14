@@ -32,12 +32,12 @@ payload is arm64, ad-hoc signed, and requires the minimum macOS version recorded
 in `BUILD_INFO.json`. SDL2-compat dynamically loads SDL3: preserve the
 `libSDL3.dylib` symlink in addition to the linked libraries.
 
-Parser test (from repo root):
+Parser test (from repo root; Python tools run through the locked uv environment):
 
 ```sh
 c++ -std=c++11 -I src tools/yomigana/tests/ruby_parser.cpp -o ruby-parser-test
 ./ruby-parser-test
-python -m unittest discover -s tools/yomigana/tests -v
+uv run --locked python -m unittest discover -s tools/yomigana/tests -v
 ```
 
 Earlier validation covered bilingual captures, existing saves, restart/backlog,
