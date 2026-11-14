@@ -56,16 +56,15 @@ PowerShell에서:
 ```powershell
 git clone --branch feat/japanese-ruby https://github.com/lyra95/ponscripter-fork.git
 cd ponscripter-fork
-py -3 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r tools/yomigana/requirements.txt
-.\.venv\Scripts\python.exe -m unittest discover -s tools/yomigana/tests -v
+uv sync --locked
+uv run --locked python -m unittest discover -s tools/yomigana/tests -v
 ```
 
 독음 생성은 **원본을 덮어쓰지 않고 다른 파일로** 합니다. 출력은 게임 밖의 작업
 폴더에 두고, Windows용 엔진을 준비한 뒤 게임을 종료한 상태에서 적용하세요.
 
 ```powershell
-.\.venv\Scripts\python.exe tools/yomigana/annotate.py `
+uv run --locked python tools/yomigana/annotate.py `
   "C:\Program Files (x86)\Steam\steamapps\common\Umineko\0.u" `
   ".\local-output\0.u"
 ```
@@ -86,7 +85,7 @@ py -3 -m venv .venv
 
 ```powershell
 # 빌드 아키텍처에 맞춰 win32 또는 win64를 선택합니다.
-.\.venv\Scripts\python.exe tools/yomigana/fetch_steam_sdk.py --platform win64
+uv run --locked python tools/yomigana/fetch_steam_sdk.py --platform win32
 ```
 
 5. **Mac의 dylib/실행 파일을 Windows에 복사해 실행할 수 없습니다.**
@@ -151,7 +150,7 @@ Apple이 다운로드한 실행 파일을 차단하면 먼저 출처와 체크�
 SMPEG2, FreeType, PNG/JPEG, Ogg/Vorbis 등 개발 라이브러리가 필요합니다.
 
 ```bash
-python3 tools/yomigana/fetch_steam_sdk.py --platform macos
+uv run --locked python tools/yomigana/fetch_steam_sdk.py --platform macos
 cmake -S . -B build -DCMAKE_PREFIX_PATH=/opt/homebrew \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_CPU_GFX=OFF -DUSE_STEAM=ON \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.8 -DCMAKE_CXX_STANDARD=11 \
@@ -163,11 +162,11 @@ cmake --build build -j 8
 출력 경로는 아직 존재하지 않는 새 경로여야 합니다. 실제 설치 앱을 출력으로 지정하지 마세요.
 
 ```bash
-python3 tools/yomigana/bundle_macos.py \
+uv run --locked python tools/yomigana/bundle_macos.py \
   --app-template "$HOME/Library/Application Support/Steam/steamapps/common/Umineko/Umineko1to4.app" \
   --binary build/src/ponscr --output release-output/staging/Umineko1to4.app \
   --manifest release-output/libraries.json
-python3 tools/yomigana/package_macos.py \
+uv run --locked python tools/yomigana/package_macos.py \
   --app release-output/staging/Umineko1to4.app --version 0.1.0 \
   --output release-output/assets --library-sources release-output/libraries.json
 ```
@@ -180,7 +179,7 @@ SDL2-compat가 동적으로 여는 SDL3의 별칭도 보존합니다.
 로컬 게임의 폰트만 읽고, 테스트용 대사/저장 파일은 임시 폴더에 만듭니다.
 
 ```bash
-python3 tools/yomigana/tests/test_mac_runtime.py \
+uv run --locked python tools/yomigana/tests/test_mac_runtime.py \
   --app release-output/staging/Umineko1to4.app \
   --fonts "$HOME/Library/Application Support/Steam/steamapps/common/Umineko/fonts"
 ```
