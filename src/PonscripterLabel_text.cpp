@@ -25,6 +25,39 @@
 
 #include "PonscripterLabel.h"
 
+int PonscripterLabel::rubyguardCommand(const pstring& cmd)
+{
+    ruby_pageguard_label = script_h.readStrValue();
+    return RET_CONTINUE;
+}
+
+bool PonscripterLabel::rubySegmentFits(const char* text)
+{
+    // Use the real renderer and font metrics on a copy of the cursor. No pixels,
+    // text buffers, voice commands or game variables are changed by this pass.
+    Fontinfo probe = sentence_font;
+    int bottom = screen_height * screen_ratio2 / screen_ratio1;
+    if (sentence_font_info.image_surface && sentence_font_info.pos.h > 0) {
+        int window_bottom = (sentence_font_info.pos.y + sentence_font_info.pos.h)
+                            * screen_ratio2 / screen_ratio1;
+        bottom = std::min(bottom, window_bottom);
+    }
+    while (*text && *text != '\n' && *text != '@' && *text != '\\') {
+        if (*text == '#' && std::strlen(text) >= 7) { text += 7; continue; }
+        if (*text == '!' && (text[1] == 's' || text[1] == 'w' || text[1] == 'd')) {
+            text += 2;
+            if (*text == 'd') ++text;
+            while (*text >= '0' && *text <= '9') ++text;
+            continue;
+        }
+        text += drawChar(text, &probe, false, false, NULL, NULL);
+        // line_space includes both the body and ruby allocation, leaving room
+        // for descenders rather than measuring just the current glyph's ink.
+        if (probe.GetY() + probe.line_space() > bottom) return false;
+    }
+    return true;
+}
+
 Glyph
 PonscripterLabel::renderGlyph(Font* font, Uint16 text, int size,
                               float x_fractional_part)
@@ -102,6 +135,44 @@ PonscripterLabel::drawChar(const char* text, Fontinfo* info, bool flush_flag,
         bool lookback_flag, SDL_Surface* surface, AnimationInfo* cache_info,
     SDL_Rect* clip)
 {
+    RubySpan ruby = parseRuby(text);
+    if (ruby.bytes) {
+        const bool hidden = current_read_language != -1 &&
+                            current_read_language != current_language;
+        if (!hidden) {
+            Fontinfo measure = *info;
+            float base_width = measure.StringAdvance(ruby.base.c_str());
+            Fontinfo small = *info;
+            small.ruby_layout = false;
+            small.set_mod_size(info->ruby_size());
+            small.pitch_x = 0;
+            float reading_width = Fontinfo::ruby_enabled ?
+                small.StringAdvance(ruby.reading.c_str()) : 0;
+            float width = std::max(base_width, reading_width);
+            wchar next = file_encoding->DecodeChar(text + ruby.bytes);
+            float trailing = isStartKinsoku(next) ? info->GlyphAdvance(next) : 0;
+            if (info->isNoRoomFor(width + trailing) && !info->isLineEmpty()) info->newLine();
+            float start_x = info->GetXOffset();
+            int start_y = info->GetYOffset();
+            info->advanceBy((width - base_width) / 2);
+            const char* p = ruby.base.c_str();
+            while (*p) p += drawChar(p, info, false, false, surface, cache_info, clip);
+            if (Fontinfo::ruby_enabled) {
+                small.top_y += info->ruby_headroom() - info->ruby_size() - 3;
+                small.SetXY(start_x + (width - reading_width) / 2, start_y);
+                p = ruby.reading.c_str();
+                while (*p) p += drawChar(p, &small, false, false, surface, cache_info, clip);
+            }
+            info->SetXY(start_x + width, start_y);
+            if (flush_flag && surface == accumulation_surface) flush(refreshMode());
+        }
+        if (lookback_flag) {
+            for (int j = 0; j < 2; ++j)
+                if (current_read_language == j || current_read_language == -1)
+                    current_text_buffer[j]->addBytes(text, ruby.bytes);
+        }
+        return ruby.bytes;
+    }
     int bytes;
     wchar unicode = file_encoding->DecodeWithLigatures(text, *info, bytes);
 
@@ -153,7 +224,7 @@ PonscripterLabel::drawChar(const char* text, Fontinfo* info, bool flush_flag,
         float x = info->GetX() * screen_ratio1 / screen_ratio2;
         if (info->getRTL())
             x -= adv;
-        int   y = info->GetY() * screen_ratio1 / screen_ratio2;
+        int   y = (info->GetY() + info->ruby_headroom()) * screen_ratio1 / screen_ratio2;
 
         SDL_Color color;
         SDL_Rect  dst_rect;
@@ -508,6 +579,7 @@ int PonscripterLabel::textCommand()
     int ret = enterTextDisplayMode();
     if (ret != RET_NOMATCH) return ret;
 
+    if (line_enter_status < 2) ruby_check_segment = true;
     line_enter_status = 2;
     ret = processText();
     if (ret == RET_CONTINUE) {
@@ -559,6 +631,22 @@ int PonscripterLabel::processText()
                 file_encoding->NextCharSizeWithLigatures
                 (script_h.getStrBuf(string_buffer_offset), &sentence_font);
         event_mode = IDLE_EVENT_MODE;
+    }
+
+    if (ruby_check_segment) {
+        ruby_check_segment = false;
+        if (ruby_pageguard_label && Fontinfo::ruby_enabled &&
+            current_language == 1 && current_read_language == 1 &&
+            !current_text_buffer[1]->empty() &&
+            !rubySegmentFits(script_h.getStrBuf(string_buffer_offset))) {
+            // The existing script routine archives this page in its custom
+            // backlog, then clears it. Resume at the SAME byte, so ruby words
+            // and voice alignment are not skipped or repeated.
+            nest_infos.push_back(NestInfo(script_h, script_h.getCurrent(),
+                                          string_buffer_offset));
+            setCurrentLabel(ruby_pageguard_label);
+            return RET_CONTINUE;
+        }
     }
 
     if (script_h.readStrBuf(string_buffer_offset) == 0x0a ||

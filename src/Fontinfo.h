@@ -45,6 +45,12 @@ class Fontinfo {
     bool  is_vertical, is_bidirect;
 public:
     static int default_encoding;
+    static bool ruby_enabled, ruby_japanese;
+    bool ruby_layout;
+    int ruby_size() const { return size() * 2 / 5 > 8 ? size() * 2 / 5 : 8; }
+    int ruby_headroom() const {
+        return ruby_layout && ruby_enabled && ruby_japanese ? ruby_size() + 5 : 0;
+    }
 
     Font* font() const;
 
