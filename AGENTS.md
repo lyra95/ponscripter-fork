@@ -10,7 +10,8 @@ Read `docs/YOMIGANA.md` and `tools/yomigana/AGENTS.md` before continuing.
 ## What is preserved here
 
 - Engine changes: ruby notation `｜漢字《かんじ》`, ruby drawing/width calculation,
-  Japanese-only line spacing, text-buffer/backlog and skip/timing support.
+  extra line spacing only on Japanese text segments that contain ruby, text-buffer/
+  backlog and skip/timing support.
 - `rubyguard *clear_text_and_save_backlog` measures the next segment and invokes
   the game's callback before a page overflows. It handles a non-empty page;
   it does not split an arbitrarily long single segment.

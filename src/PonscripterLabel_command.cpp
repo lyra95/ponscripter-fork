@@ -777,6 +777,7 @@ int PonscripterLabel::sevolCommand(const pstring& cmd)
 void PonscripterLabel::DoSetwindow(PonscripterLabel::WindowDef& def)
 {
     sentence_font.ruby_layout = true;
+    sentence_font.ruby_text_active = false;
     sentence_font.top_x  = def.left;
     sentence_font.top_y  = def.top;
     sentence_font.area_x = def.width;
@@ -1799,7 +1800,7 @@ int PonscripterLabel::getreadlangCommand(const pstring& cmd)
 int PonscripterLabel::showlangenCommand(const pstring& cmd)
 {
     current_language = 0;
-    Fontinfo::ruby_japanese = false;
+    sentence_font.ruby_text_active = false;
     //loadSaveFile(15);
     text_info.fill(0, 0, 0, 0);
     flush(refreshMode(), &sentence_font_info.pos);
@@ -1810,7 +1811,7 @@ int PonscripterLabel::showlangenCommand(const pstring& cmd)
 int PonscripterLabel::showlangjpCommand(const pstring& cmd)
 {
     current_language = 1;
-    Fontinfo::ruby_japanese = true;
+    sentence_font.ruby_text_active = false;
     //loadSaveFile(15);
     text_info.fill(0, 0, 0, 0);
     flush(refreshMode(), &sentence_font_info.pos);

@@ -26,6 +26,15 @@
 #include "PonscripterLabel.h"
 #include <algorithm>
 
+static bool segmentContainsRuby(const char* text, bool stop_at_wait)
+{
+    for (const char* p = text; *p; ++p) {
+        if (*p == '\n' || (stop_at_wait && (*p == '@' || *p == '\\'))) break;
+        if (parseRuby(p).bytes) return true;
+    }
+    return false;
+}
+
 int PonscripterLabel::rubyguardCommand(const pstring& cmd)
 {
     ruby_pageguard_label = script_h.readStrValue();
@@ -334,6 +343,9 @@ void PonscripterLabel::restoreTextBuffer()
     f_info.clear();
     const char* buffer = current_text_buffer[current_language]->contents;
     int buffer_count = current_text_buffer[current_language]->contents.length();
+    f_info.ruby_text_active = Fontinfo::ruby_enabled &&
+        (current_read_language == -1 || current_read_language == current_language) &&
+        segmentContainsRuby(buffer, false);
 
     const wchar first_ch = file_encoding->DecodeWithLigatures(buffer, f_info);
     if (is_indent_char(first_ch)) f_info.SetIndent(first_ch);
@@ -342,7 +354,10 @@ void PonscripterLabel::restoreTextBuffer()
     while (i < buffer_count) {
         if (buffer[i] == 0x0a) {
             f_info.newLine();
-        ++i;
+            ++i;
+            f_info.ruby_text_active = Fontinfo::ruby_enabled &&
+                (current_read_language == -1 || current_read_language == current_language) &&
+                segmentContainsRuby(buffer + i, false);
         }
         else {
             i += drawChar(buffer + i, &f_info, false, false, NULL, &text_info);
@@ -577,7 +592,12 @@ int PonscripterLabel::textCommand()
     int ret = enterTextDisplayMode();
     if (ret != RET_NOMATCH) return ret;
 
-    if (line_enter_status < 2) ruby_check_segment = true;
+    if (line_enter_status < 2) {
+        ruby_check_segment = true;
+        sentence_font.ruby_text_active = Fontinfo::ruby_enabled &&
+            (current_read_language == -1 || current_read_language == current_language) &&
+            segmentContainsRuby(script_h.getStrBuf(string_buffer_offset), true);
+    }
     line_enter_status = 2;
     ret = processText();
     if (ret == RET_CONTINUE) {

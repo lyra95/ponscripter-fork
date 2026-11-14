@@ -77,6 +77,7 @@ int PonscripterLabel::loadSaveFile2(SaveFileType file_type, int file_version)
 
     sentence_font.clear();
     sentence_font.ruby_layout = true;
+    sentence_font.ruby_text_active = false;
     sentence_font.top_x	 = readInt();
     sentence_font.top_y	 = readInt();
     sentence_font.area_x = readInt();
