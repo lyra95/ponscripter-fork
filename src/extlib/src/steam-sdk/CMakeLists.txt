@@ -6,7 +6,7 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	endif ()
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 	# macOS binary is universal
-	set(STEAM_BINARY "osx32/libsteam_api.dylib")
+	set(STEAM_BINARY "osx/libsteam_api.dylib")
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 	if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
 		set(STEAM_BINARY "linux64/libsteam_api.so")

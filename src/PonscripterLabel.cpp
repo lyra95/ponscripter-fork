@@ -1090,7 +1090,13 @@ pstring Platform_GetSavePath(const pstring& gameid)
 #endif
 
 pstring PonscripterLabel::getSavePath(const pstring gameid, const pstring& local_savedir) {
-#ifdef STEAM
+#ifdef LOCAL_SAVEDIR
+    // Preserve this installation's saves/ folder beside the app, including
+    // when Steam API support is enabled. Do not create a saveloc.txt file.
+    // The script's legacy ";localsave mysav" must not change this release's
+    // existing save location when switching from the original Mac engine.
+    return Local_GetSavePath("saves/");
+#elif defined(STEAM)
     return Steam_GetSavePath(local_savedir);
 #else
     #ifdef LOCAL_SAVEDIR

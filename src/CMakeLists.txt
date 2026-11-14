@@ -122,6 +122,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	target_compile_definitions(ponscr
 		PRIVATE
 			MACOSX
+			LOCAL_SAVEDIR
 			UTF8_CAPTION
 			UTF8_FILESYSTEM
 			USE_OGG_VORBIS)
