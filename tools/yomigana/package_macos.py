@@ -50,7 +50,7 @@ def package(app, output, version, library_sources=None):
     minimum = max(minimums, key=lambda s: tuple(map(int, s.split("."))))
     portable = stage / "tools/yomigana"
     portable.mkdir(parents=True)
-    for filename in ["annotate.py", "apply_macos.py", "requirements.txt"]:
+    for filename in ["annotate.py", "apply_macos.py", "save_offsets.py", "requirements.txt"]:
         shutil.copy2(ROOT / "tools/yomigana" / filename, portable / filename)
     shutil.copy2(ROOT / "COPYING", stage / "COPYING")
     shutil.copy2(ROOT / "docs/YOMIGANA.md", stage / "README.md")

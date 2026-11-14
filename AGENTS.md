@@ -51,6 +51,18 @@ Do not replace a running game, terminate it automatically, or overwrite newer
 saves with historical backups. User authorization in the session takes precedence.
 Recheck the active save directory; Windows installations currently use `mysav`.
 
+Ruby conversion changes absolute script byte offsets even if line count and
+stripped text match. When replacing a script, use `tools/yomigana/save_offsets.py`
+with the exact script that produced the saves and the target script. It copies
+PNS 2.7 saves and relocates gosub/FOR stack addresses without changing progress
+or the save version. Mac apply/restore now performs this step transactionally.
+Do not remigrate saves already written against the target script. Mixed-origin
+legacy slots require identifying their source scripts separately; do not guess.
+Unsupported formats and TEXTGOSUB continuations on changed lines are rejected.
+The initial published Mac ZIP predates this fix. Engine-only updates with an
+unchanged script do not require save migration. See the explicit copied-app
+regression in `tools/yomigana/tests/test_save_migration_runtime.py`.
+
 Do not commit personal paths, game dialogue/assets, saves, virtualenvs, SDK
 binaries or engine binaries. Portable tools live in `tools/yomigana/`.
 The only intended game screenshots in Git are the two requested README images.

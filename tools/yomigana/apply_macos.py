@@ -94,11 +94,18 @@ def apply(game, release, backup_parent):
             raise RuntimeError("Release checksum mismatch: " + name)
     # Import lazily so restoring a backup needs only the Python standard library.
     from annotate import convert
+    from save_offsets import migrate_directory
     with tempfile.TemporaryDirectory(prefix="yomigana-convert-") as temp:
         temp = Path(temp)
         converted = temp / "0.u"
         report = temp / "conversion.report.json"
         convert(game / "0.u", converted, report)
+        sources = {"0.u": converted}
+        save_report = {}
+        if (game / "saves").exists():
+            save_report = migrate_directory(game / "0.u", converted, game / "saves", temp / "saves")
+            sources["saves"] = temp / "saves"
+        ensure_stopped(game)
         backup = backup_game(game, backup_parent)
         staged_app = temp / "Umineko1to4.app"
         copy(app, staged_app)
@@ -107,10 +114,12 @@ def apply(game, release, backup_parent):
         if frameworks.exists():
             shutil.rmtree(frameworks)
         copy(release / "engine/Frameworks", frameworks)
-        replace_targets(game, {"Umineko1to4.app": staged_app, "0.u": converted})
+        ensure_stopped(game)
+        replace_targets(game, {"Umineko1to4.app": staged_app, **sources})
         shutil.copy2(report, backup / "conversion.report.json")
         shutil.copy2(release / "BUILD_INFO.json", backup / "release-build-info.json")
-    print("Applied. Existing saves/ preserved. Backup:", backup)
+        (backup / "save-offset-migration.json").write_text(json.dumps(save_report, indent=2), encoding="utf-8")
+    print("Applied. Current save progress retained; stack offsets relocated. Backup:", backup)
 
 
 def restore(game, backup, backup_parent):
@@ -120,8 +129,18 @@ def restore(game, backup, backup_parent):
     for entry in manifest["files"]:
         if sha(backup / entry["path"]) != entry["sha256"]:
             raise RuntimeError("Backup checksum mismatch: " + entry["path"])
-    recovery = backup_game(game, backup_parent)
-    replace_targets(game, {name: backup / name for name in manifest["restore_default"]})
+    from save_offsets import migrate_directory
+    with tempfile.TemporaryDirectory(prefix="yomigana-restore-") as temp:
+        sources = {name: backup / name for name in manifest["restore_default"]}
+        save_report = {}
+        if (game / "saves").exists():
+            save_report = migrate_directory(game / "0.u", backup / "0.u", game / "saves", Path(temp) / "saves")
+            sources["saves"] = Path(temp) / "saves"
+        ensure_stopped(game)
+        recovery = backup_game(game, backup_parent)
+        ensure_stopped(game)
+        replace_targets(game, sources)
+        (recovery / "save-offset-migration.json").write_text(json.dumps(save_report, indent=2), encoding="utf-8")
     print("Engine and script restored; CURRENT saves/ preserved. Previous version:", recovery)
 
 
