@@ -98,6 +98,7 @@ Makefile*
 .svn/
 *.utf
 *.o
+*.d
 *.exe
 /Makefile
 /src/Makefile
