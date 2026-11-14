@@ -6,6 +6,16 @@
 > - **작업 브랜치:** [`feat/japanese-ruby`](https://github.com/lyra95/ponscripter-fork/tree/feat/japanese-ruby)
 > - **기준 브랜치(baseline):** 이 포크의 [`mod`](https://github.com/lyra95/ponscripter-fork/tree/mod). 원본 [`07th-mod/ponscripter-fork`의 `mod`](https://github.com/07th-mod/ponscripter-fork/tree/mod)에서 가져온 수정 전 코드입니다.
 > - **작업 시작 기준 커밋:** [`ba457e4`](https://github.com/07th-mod/ponscripter-fork/commit/ba457e4261f9876a707d12ee03fd22dc6b0a2478). 이후 변경 사항은 이 커밋을 기준으로 비교할 수 있습니다.
+> - **다른 컴퓨터로 이관:** [Steam 설치 기준 가이드 및 Windows 작업 인계](docs/YOMIGANA.md)
+> - **Mac 바이너리:** [GitHub Releases](https://github.com/lyra95/ponscripter-fork/releases) — arm64, macOS 26.0 이상. Windows 빌드는 아직 제공하지 않습니다.
+
+## 루비 적용 전후
+
+동일한 세이브의 같은 장면을 1920×1080으로 촬영했습니다. 이미지를 클릭하면 크게 볼 수 있습니다.
+
+| 적용 전 | 루비 적용 후 |
+| --- | --- |
+| [![적용 전 일본어 대사](docs/images/ruby-before.png)](docs/images/ruby-before.png) | [![한자 위에 독음을 표시한 대사](docs/images/ruby-after.png)](docs/images/ruby-after.png) |
 
 # Ponscripter-fork (07th-mod)
 
