@@ -729,6 +729,7 @@ private:
     bool ruby_check_segment;
     pstring ruby_pageguard_label;
     bool rubySegmentFits(const char* text);
+    int textCharacterCount(const char* text);
     int  global_speed_modifier;
     Glyph current_glyph;
 

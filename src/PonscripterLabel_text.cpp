@@ -31,6 +31,21 @@ int PonscripterLabel::rubyguardCommand(const pstring& cmd)
     return RET_CONTINUE;
 }
 
+int PonscripterLabel::textCharacterCount(const char* text)
+{
+    RubySpan ruby = parseRuby(text);
+    if (!ruby.bytes) return 1;
+    // Output/skip still consume a complete span. Auto-mode character timing
+    // counts its base glyphs, not the span as one character or the reading.
+    int count = 0;
+    const char* p = ruby.base.c_str();
+    while (*p) {
+        p += file_encoding->NextCharSizeWithLigatures(p, &sentence_font);
+        ++count;
+    }
+    return count;
+}
+
 bool PonscripterLabel::rubySegmentFits(const char* text)
 {
     // Use the real renderer and font metrics on a copy of the cursor. No pixels,
@@ -485,7 +500,7 @@ int PonscripterLabel::clickWait(bool display_char)
         if (display_char) {
             drawChar(c, &sentence_font, false, true, accumulation_surface,
                      &text_info);
-            ++num_chars_in_sentence;
+            num_chars_in_sentence += textCharacterCount(c);
         }
         if (textgosub_label) {
             const char* next_text = c + 1;
@@ -532,7 +547,7 @@ int PonscripterLabel::clickNewPage(bool display_char)
         drawChar(c, &sentence_font, true, true, accumulation_surface,
                  &text_info);
         if (current_read_language == -1 || current_read_language == current_language) {
-            ++num_chars_in_sentence;
+            num_chars_in_sentence += textCharacterCount(c);
         }
     }
     
@@ -856,7 +871,7 @@ int PonscripterLabel::processText()
                  flush_flag, true, accumulation_surface, &text_info);
 
         if (current_read_language == -1 || current_read_language == current_language) {
-            ++num_chars_in_sentence;
+            num_chars_in_sentence += textCharacterCount(script_h.getStrBuf(string_buffer_offset));
         }
         if (flush_flag) {
             event_mode = WAIT_SLEEP_MODE;

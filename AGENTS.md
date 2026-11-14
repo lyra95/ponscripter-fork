@@ -24,6 +24,10 @@ installed for EP1–4; startup was observed and the user reported it working.
   their own string. Do not inherit the live dialogue's ruby state: that clips
   old-log readings after a plain page and shifts ordinary menu labels after a
   ruby page. `test_backlog_runtime.py` compares both histories and ruby-off.
+- Ruby remains one output/skip unit, but character-based auto-mode timing
+  counts the base glyphs with the existing encoding/ligature rules. The reading
+  does not add to the wait. Fixed positive auto times are unchanged. The explicit
+  `test_auto_mode_runtime.py` checks negative and positive timing modes.
 - `rubyguard *clear_text_and_save_backlog` measures the next segment and calls
   the script callback if an existing page would overflow. It does not split
   an arbitrarily long single segment.
