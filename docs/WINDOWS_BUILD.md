@@ -1,91 +1,139 @@
-# Windows continuation notes
+# Windows build and installation notes
 
-This is the Windows build guide for `feat/japanese-ruby-ep5-8`. The branch
-starts from `e06c6a2f298f2e1036e7c5b8fd4b2571808f8f71`, replays the EP1–4 ruby
-commits from `feat/japanese-ruby`, then adds EP5–8 fixes. EP1–4 remains on
-`feat/japanese-ruby`, based on `mod:ba457e4261f9876a707d12ee03fd22dc6b0a2478`.
+The active `feat/japanese-ruby` branch is based on
+`e06c6a2f298f2e1036e7c5b8fd4b2571808f8f71` and is used locally for EP1–4 and
+EP5–8. Its former name was `feat/japanese-ruby-ep5-8`.
+The earlier EP1–4 branch based on `mod:ba457e4` is preserved as
+`backup/feat/japanese-ruby` on origin and locally.
 
-Why keep the EP5–8 base: the installed answer script calls custom commands such
-as `simul_lipall`, `simul_multfont`, `simul_nextld` and `simul_nextvoice`.
-`e06c6a2` registers and implements these; `ba457e4` does not. This demonstrates
-script-engine compatibility needs, not the provenance of the installed game
-executable.
+The answer script calls custom commands such as `simul_lipall`,
+`simul_multfont`, `simul_nextld` and `simul_nextvoice`. `e06c6a2` implements them;
+`ba457e4` does not. This explains retaining that base, not the provenance of the
+installed executable. It does not imply that this engine cannot run EP1–4.
 
 ## Local toolchain and pinned Python dependencies
 
-| Component | Version / source |
+These are versions recorded for the local Windows work, not minimum versions
+or a promise that the same packages remain available from package repositories.
+
+| Component | Recorded version / source |
 | --- | --- |
 | uv | 0.13.8 (`x86_64-pc-windows-msvc`) |
-| Python | CPython 3.12.10, selected by uv |
+| Python | CPython 3.12.10, selected by `.python-version` |
 | fugashi | 1.5.2, pinned in `pyproject.toml` and `uv.lock` |
 | unidic-lite | 1.0.8, pinned in `pyproject.toml` and `uv.lock` |
-| Steamworks headers and Win32 redistributable | `rlabrecque/SteamworksSDK` commit `df2baabf574a738ef1ea90a7e89339107fc0a279`; fetched with `tools/yomigana/fetch_steam_sdk.py --platform win32` |
-| MSYS2 | Installed with winget package `MSYS2.MSYS2`, installer version `20260927` |
-| MINGW32 GCC | `mingw-w64-i686-gcc` 16.2.0-4 |
-| MINGW32 make | `make` 4.4.1-3 |
+| Steamworks headers and Win32 redistributable | `rlabrecque/SteamworksSDK` commit `df2baabf574a738ef1ea90a7e89339107fc0a279` |
+| MSYS2 | Installed with winget package `MSYS2.MSYS2`, installer version recorded as `20260927` |
+| MINGW32 GCC | 16.2.0-4 (`mingw-w64-i686-gcc`) |
+| make | 4.4.1-3 (MSYS2 package `make`) |
 | Autoconf tooling | `autoconf-wrapper` 20260320-1; `automake-wrapper` 20260320-1 |
 
-The repository's Python tooling is a non-package uv project. Recreate it with
-`uv sync --locked`; keep `.venv/` local and commit `uv.lock`. The standalone Mac
-release continues to include `tools/yomigana/requirements.txt`.
+The Python tooling is a non-package uv project. Run `uv sync --locked` from
+the repository root; keep `.venv/` local. The standalone Mac release also
+contains `tools/yomigana/requirements.txt`. Python does not build the C++ engine.
 
-The installed Steam game executable is PE machine `0x014C` (x86). Use the MSYS2
-MINGW32 environment to match it. The repo's CI uses these build packages:
+## Windows x86 build
+
+Use MSYS2 MINGW32 to match the installed PE i386 (`0x014C`) executables.
+The historical CI scripts use these packages and `make -j2`; local builds
+have succeeded with this environment. This is not a claim that the old hosted
+CI runner configuration still works today.
 
 ```sh
 pacman --sync --noconfirm --needed \
   mingw-w64-i686-gcc make autoconf automake-wrapper
 ```
 
-The project `INSTALL.md` calls for `./configure --steam` followed by `make`.
-In the Windows CI this is run in MINGW32 with `make -j2`. The pinned SDK
-redistributable is staged by `configure` into `src/extlib/lib/steam_api.dll`;
-do not copy the Mac dylib or a Win64 DLL into this x86 build. This engine
-imports `SteamInternal_SteamAPI_Init`, which the installed game's older
-186,560-byte `steam_api.dll` does not export. Deploy the matching pinned
-280,728-byte Win32 SDK DLL with the new engine. Back up and restore the old
-engine and DLL as a pair; the old engine imports a different Steam API ABI.
+In PowerShell, from the repository root, prepare the SDK:
 
-## Installed game state observed for this continuation
+```powershell
+uv sync --locked
+uv run --locked python tools/yomigana/fetch_steam_sdk.py --platform win32
+```
 
-- Steam game directory: `<SteamLibrary>\steamapps\common\Umineko` (use the
-  local Steam library path; do not hard-code a personal path into the repo).
-- The current script is the Korean review patch dated 2026-08-10. It contains
-  `langjp`, `langen`, `rubyon 17,17`, `simul_*` custom commands, and
-  `*clear_text_and_save_backlog`; the header selects `mysav` with
-  `;localsave mysav`.
-- `saveloc.txt` points to the game's `mysav` directory. `mysav` had saves
-  written on 2026-11-14, while `saves` contains older files and
-  `steam_autocloud.vdf`. Recheck this before installing or testing; do not
-  assume the two directories are interchangeable.
-- The game was running during read-only inspection, then closed before backup.
-  The current executable, Steam API DLL, script, `saveloc.txt`, `mysav`, and
-  `saves` have been copied to a date-stamped backup outside the Git repo. Never
-  replace a running game or restore older saves over newer progress; preserve
-  both save directories.
+In an MSYS2 **MINGW32** shell, from the repository root:
 
-The full-game conversion was run to an ignored validation path inside `.venv/`
-without modifying the installed script. Its report showed 375,656 lines,
-229,479 ruby groups, Korean dialogue unchanged, and a byte-identical round trip.
-Automatic readings still need contextual review.
+```sh
+./configure --steam
+make -j2
+```
 
-## Previous 2026-11-14 local result
+The engine is `src/ponscr.exe`; its matching SDK DLL is staged at
+`src/extlib/lib/steam_api.dll`. This DLL is the unmodified pinned Win32 SDK
+redistributable, not an engine-specific shim. The new engine imports
+`SteamInternal_SteamAPI_Init`; an older 186,560-byte DLL observed during the
+initial installation did not export it. The pinned DLL is 280,728 bytes, SHA256
+`1cb8b7cb77923762d4e49b27e44295369a79e93b5d4282c5e840b268d28fe771`.
+Match by architecture and hash, not size alone. An installation already using
+this DLL does not need a second copy. Back up the old engine and its DLL as a
+pair before changing either one.
 
-- `./configure --steam && make -j2` succeeded in MSYS2 MINGW32. The resulting
-  `src/ponscr.exe` is PE i386; its matching SDK DLL was staged alongside it.
-- The seven Python tests passed under `uv run --locked`; the C++ ruby parser
-  smoke test also exited successfully.
-- A game copy using the converted script and matching engine/DLL opened and
-  remained responsive. The installed game was then updated with those same
-  three files and launched; its window remained responsive. The current saves
-  were backed up before replacement, and no save-file timestamps changed on
-  launch.
+## Per-game installation
 
-## Rebuild after branch replay
+| Game | Observed Steam directory name | Executable name |
+| --- | --- | --- |
+| EP1–4, Question Arcs | `Umineko` | `Umineko1to4.exe` |
+| EP5–8, Answer Arcs | `Umineko Chiru` | `Umineko5to8.exe` |
 
-On 2026-11-14 the replayed EP1–4 ruby commits plus EP5–8 fixes built successfully
-again in MSYS2 MINGW32 with `./configure --steam && make -j2`. The output is PE
-i386 and the matching Win32 Steam SDK DLL was staged. The rebuilt executable was
-installed to the answer game folder after backing up its prior executable, DLL,
-and `0.u`. The existing DLL already had the expected SHA256, and `0.u` remained
-unchanged. Runtime behavior after this rebuild has not yet been checked.
+Locate each directory through Steam; library paths vary. Both installed scripts
+have a Korean review patch caption dated 2026-08-10, bilingual `langjp`/`langen`,
+`rubyon 17,17` and `*clear_text_and_save_backlog`. The installed converted scripts
+also contain ruby notation and the single `rubyguard` directive. Steam's original
+unmodified script is not the conversion target. Prepare each game's compatible
+script separately; do not copy the answer script or game assets into EP1–4.
+
+The observed `saveloc.txt` in each game points to that game's `mysav` directory.
+The header contains `;localsave mysav`. `saves` also exists and must not be assumed
+to contain current progress. Recheck these settings and current saves before
+each installation. Keep each game's own `steam_appid.txt` and configuration.
+
+1. Close the game. Back up its current executable, DLL, active `0.u`,
+   `saveloc.txt`, App ID file, and current save directories outside the repo.
+2. For a first ruby conversion, run `annotate.py` on that game's unconverted
+   compatible `0.u` into a separate output file. Review the report. For an engine
+   update with an already converted script, keep the script as-is.
+3. Copy `src/ponscr.exe` over that game's executable using the name in the table.
+   Deploy the matching DLL if needed. One build can be used for both games;
+   their scripts, assets and save directories remain separate.
+4. Launch normally and check existing-save loading, Korean/Japanese switching,
+   ruby layout, backlog, and saving/restarting. Compare script and save hashes
+   around an engine-only update; startup alone does not establish all of these.
+
+## Recorded validation and limits
+
+The initial Windows handoff records report a successful build, seven Python
+tests, a standalone C++ parser check and a responsive copied game installation.
+Those are historical results, not tests rerun for every subsequent revision.
+
+Earlier notes mixed the Question Arcs directory and conversion statistics into
+an Answer Arcs section. On 2026-11-15 the installed converted scripts were
+rechecked separately:
+
+| Script | Lines | Ruby groups |
+| --- | ---: | ---: |
+| EP1–4 | 375,656 | 229,479 |
+| EP5–8 | 365,085 | 211,130 |
+
+These are observations of the local scripts, not required counts for every patch
+version. Both contain one `rubyguard` directive. The converter's own checks
+require an identical round trip after removing ruby and that directive, and
+preserve non-Japanese lines. The installed-file counts alone do not prove that
+historical conversion validation was performed for either script.
+
+The answer engine was rebuilt and installed after the ruby layout and redraw
+fixes, with its script and current saves backed up. On 2026-11-15 the source at
+`dce5664` was rebuilt in MINGW32 and installed as `Umineko1to4.exe` for EP1–4.
+The installed engine SHA256 was
+`964431200dcebe17d4a94fdf4327bc9e9de46261b83c15e8c6fac5df5acb3c28`.
+The problem game opened and played its opening video. Its script and pre-existing
+save files were byte-identical to the backup after startup. The user then reported
+that it appeared to work; the branch was renamed to `feat/japanese-ruby`.
+The answer installation still had the earlier build hash
+`915fd7e1987f2243f45e5576cf295c19f88acf2fa833aec9a091e8b8fcd2752c` when inspected.
+Different build hashes do not by themselves establish different engine behavior.
+
+The user previously reported answer-game play and rendering issues that prompted
+the fixes. This does not establish complete post-fix coverage. Full EP1–8 play,
+all save/load and language-switch paths, and the current source on macOS remain
+unverified. The historical Mac release uses the earlier EP1–4 source line and
+has a different save-path override; see `YOMIGANA.md` before building for Mac.

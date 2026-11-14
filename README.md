@@ -1,12 +1,12 @@
 > [!NOTE]
 > **이 포크에 대하여 — Yomigana**
 >
-> 이 저장소는 EP1–4와 EP5–8의 Ponscripter 엔진에 같은 일본어 루비 파서와 그리기 구현을 적용합니다. EP1–4는 `feat/japanese-ruby`에서 원본 07th-Mod 기준 커밋 [`ba457e4`](https://github.com/07th-mod/ponscripter-fork/commit/ba457e4261f9876a707d12ee03fd22dc6b0a2478)을 사용합니다. Windows 답편 통합은 [`feat/japanese-ruby-ep5-8`](https://github.com/lyra95/ponscripter-fork/tree/feat/japanese-ruby-ep5-8)에서 진행하며, 답편 `0.u`가 호출하는 `simul_*` 명령을 보존하기 위해 `e06c6a2` 기준 위에 EP1–4 루비 커밋을 재적용하고 답편 보정을 더합니다. 이 기준 선택은 스크립트 호환성에 근거하며 설치 실행 파일의 출처를 뜻하지 않습니다.
+> 현재 [`feat/japanese-ruby`](https://github.com/lyra95/ponscripter-fork/tree/feat/japanese-ruby)는 Windows 문제편(EP1–4)과 해답편(EP5–8)에 함께 사용하는 엔진입니다. `e06c6a2` 위에 기존 루비 변경과 렌더링 보정을 적용했으며, 이전 이름은 `feat/japanese-ruby-ep5-8`입니다. 원본 07th-Mod `ba457e4` 기반의 초기 문제편 브랜치는 [`backup/feat/japanese-ruby`](https://github.com/lyra95/ponscripter-fork/tree/backup/feat/japanese-ruby)에 보존했습니다. 답편의 `simul_*` 명령 지원 때문에 해당 기반을 유지했으며, 설치 실행 파일의 출처를 확인했다는 뜻은 아닙니다. 문제편에도 적용 후 사용자가 정상 동작을 보고했지만 전체 에피소드 호환성 검증은 아직입니다.
 >
 > 루비 표기는 `｜漢字《かんじ》`입니다. 독음 변환 도구는 기존 한글 대사·언어 전환·명령을 보존하는 것을 목표로 합니다.
 >
 > - **다른 컴퓨터로 이관:** [Steam 설치 기준 가이드 및 Windows 작업 인계](docs/YOMIGANA.md)
-> - **Mac 바이너리:** [v0.1.0 초기 배포본](https://github.com/lyra95/ponscripter-fork/releases/tag/v0.1.0-macos-arm64) — EP1–4, arm64, macOS 26.0 이상.
+> - **Mac 바이너리(초기 문제편 소스 기반, 현재 Windows 브랜치와 별도):** [v0.1.0 초기 배포본](https://github.com/lyra95/ponscripter-fork/releases/tag/v0.1.0-macos-arm64) — EP1–4, arm64, macOS 26.0 이상.
 
 ## 루비 적용 전후
 
