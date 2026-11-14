@@ -132,3 +132,11 @@ Makefile*
 /pons.creator.user
 /pons.files
 /pons.includes
+
+# Local Yomigana tooling, fixtures and release output
+.venv/
+__pycache__/
+/build/
+/release-output/
+/yomigana-backups/
+*.report.json
