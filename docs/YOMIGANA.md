@@ -1,9 +1,16 @@
 # Yomigana: 다른 컴퓨터에서 적용하거나 이어 작업하기
 
-이 포크는 **Steam판 Umineko Question Arcs (EP1–4)**의 일본어 대사에 루비를
-표시하는 엔진과 독음 변환 도구를 관리합니다. 기준은 원본 07th-Mod의 `mod`
-브랜치, 시작 커밋은 `ba457e4261f9876a707d12ee03fd22dc6b0a2478`입니다.
-작업 및 기본 브랜치는 `feat/japanese-ruby`입니다.
+이 저장소는 Steam판 괭이갈매기 울 적에 EP1–4와 EP5–8의 일본어 루비 엔진 및
+독음 변환 도구를 관리합니다. EP1–4 브랜치 `feat/japanese-ruby`는 원본
+07th-Mod `mod`의 `ba457e4261f9876a707d12ee03fd22dc6b0a2478`에서 시작합니다.
+현재 Windows 답편 브랜치 `feat/japanese-ruby-ep5-8`은 `e06c6a2`에서 시작해
+EP1–4 루비 커밋들을 재적용하고 답편용 보정을 추가합니다.
+
+답편 브랜치는 설치된 `0.u`에서 실제 호출되는 `simul_lipall`, `simul_multfont`,
+`simul_nextld`, `simul_nextvoice` 등의 명령이 `e06c6a2`에는 구현되어 있고
+`ba457e4`에는 없어서 그 기준을 보존합니다. 이것은 스크립트 호환성 근거이며,
+설치 실행 파일의 저장소 출처를 입증하지는 않습니다. 두 브랜치는 같은 루비
+파서와 그리기 코드를 공유하고, 답편 브랜치에는 추가 보정만 둡니다.
 
 현재 Mac 배포본은 [v0.1.0-macos-arm64 (pre-release)](https://github.com/lyra95/ponscripter-fork/releases/tag/v0.1.0-macos-arm64)입니다.
 2026-11-14에 새 GitHub clone과 새 Python 가상환경에서 테스트 7개 및 독립 파서를
@@ -37,11 +44,11 @@ clone하고 의존성을 다시 설치합니다. **세이브와 원본 백업은
 ### Steam 기본 설치와 모드 전제
 
 Steam에서 게임을 설치하는 것이 출발점입니다. 다만 현재 검증된 변환 대상은
-**07th-Mod 기반 한·일 대사가 함께 있는 패치의 `0.u`**입니다. 검증한 한글 패치는
-창 제목에 `검수패치 24.08.24`가 표시되는 버전입니다.
+**07th-Mod 기반 한·일 대사가 함께 있는 패치의 `0.u`**입니다. 설치 답편에서
+확인한 패치는 창 제목에 `검수패치 26.08.10`이 표시되는 버전입니다.
 
 게임 폴더에 `0.u`가 있고, 그 안에 `langjp`, `langen`, `rubyon 17,17`,
-`*clear_text_and_save_backlog`가 있어야 합니다. Steam 기본 파일만 있고 `0.utf`만
+`*clear_text_and_save_backlog`, 답편의 `simul_*` 명령 호출이 있어야 합니다. Steam 기본 파일만 있고 `0.utf`만
 있다면, 먼저 해당 게임용 호환 07th-Mod/언어 패치를 준비해야 합니다.
 **Steam 기본 설치만으로 이 변환 도구가 즉시 적용된다고 가정하지 마세요.**
 `0.utf`를 임의로 `0.u`로 바꾸는 방법은 지원하지 않습니다.
@@ -49,15 +56,14 @@ Steam에서 게임을 설치하는 것이 출발점입니다. 다만 현재 검�
 게임 이미지·음성·모드 자산과 대사 전체는 이 저장소나 Release에 포함하지 않습니다.
 엔진은 독음을 자동으로 추측하지 않으며, `｜漢字《かんじ》` 표기가 있는 대사가 필요합니다.
 
-## 2. Windows에서 이어 작업하기 — 이번에 Windows 빌드는 만들지 않음
+## 2. Windows 답편(EP5–8) 엔진 빌드 및 적용
 
 PowerShell에서:
 
 ```powershell
-git clone --branch feat/japanese-ruby https://github.com/lyra95/ponscripter-fork.git
+git clone --branch feat/japanese-ruby-ep5-8 https://github.com/lyra95/ponscripter-fork.git
 cd ponscripter-fork
 uv sync --locked
-uv run --locked python -m unittest discover -s tools/yomigana/tests -v
 ```
 
 독음 생성은 **원본을 덮어쓰지 않고 다른 파일로** 합니다. 출력은 게임 밖의 작업
@@ -73,27 +79,11 @@ uv run --locked python tools/yomigana/annotate.py `
 지원하지 않는 스크립트는 거부합니다. 자동 독음이므로 문맥/특수 독음 검수가 필요합니다.
 원본과 한글 행/명령/줄바꿈이 보존되는지 검사합니다.
 
-### Windows 담당자가 이어서 할 일
-
-1. 먼저 [AGENTS.md](https://github.com/lyra95/ponscripter-fork/blob/feat/japanese-ruby/AGENTS.md)와 `tools/yomigana/AGENTS.md`를 읽습니다.
-2. Windows 빌드는 아직 미검증입니다. [기반 프로젝트의 Windows 빌드 안내](https://github.com/lyra95/ponscripter-fork/blob/feat/japanese-ruby/INSTALL.md)를
-   출발점으로 사용합니다. 문서의 MSYS2 `MINGW32` 절차와 이번 Mac CMake 빌드는 별개입니다.
-3. 필요한 라이브러리: SDL2, SDL2_image, SDL2_mixer, SMPEG2, FreeType,
-   bzip2, PNG, JPEG, Ogg/Vorbis, zlib. 플랫폼별 헤더/라이브러리 경로를 확인합니다.
-4. Steam 지원 빌드라면 SDK 헤더와 해당 아키텍처의 redistributable을 준비합니다.
-   선택적으로 아래 도구가 기존 Mac 작업에 사용한 SDK 버전을 내려받습니다.
-
-```powershell
-# 빌드 아키텍처에 맞춰 win32 또는 win64를 선택합니다.
-uv run --locked python tools/yomigana/fetch_steam_sdk.py --platform win32
-```
-
-5. **Mac의 dylib/실행 파일을 Windows에 복사해 실행할 수 없습니다.**
-6. 기존 Windows 게임이 실제 사용하는 저장 위치를 먼저 확인합니다. `saves`, `mysav`,
-   Steam Cloud 설정/링크가 개입할 수 있습니다. Mac 전용 저장 경로 처리를 Windows에
-   그대로 추가하지 마세요.
-7. 복사본에서 한글/일본어 전환, 기존 슬롯 로드, 저장 후 재시작, 백로그, 루비
-   타이핑/스킵, 긴 대사, **저장 경로 인자 없는 실행**을 검증한 뒤 적용합니다.
+자세한 MINGW32 빌드·Steam SDK DLL·설치 백업 절차는
+[Windows 빌드 안내](WINDOWS_BUILD.md)를 따릅니다. 2026-11-14에 이 답편
+브랜치를 다시 빌드해 x86 실행 파일과 Win32 SDK DLL을 만들었습니다. 그 빌드는
+아직 설치 폴더에서 실행 확인하지 않았습니다. 현재 게임이 실제 사용하는 저장
+폴더(`mysav` 등)를 보존하고, 실행 파일과 DLL을 한 쌍으로 백업하세요.
 
 ## 3. Mac Release 적용
 

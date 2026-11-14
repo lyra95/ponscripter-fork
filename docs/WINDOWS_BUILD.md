@@ -1,7 +1,15 @@
 # Windows continuation notes
 
-This work uses the `feat/japanese-ruby` branch and is based on
-`mod:ba457e4261f9876a707d12ee03fd22dc6b0a2478`.
+This is the Windows build guide for `feat/japanese-ruby-ep5-8`. The branch
+starts from `e06c6a2f298f2e1036e7c5b8fd4b2571808f8f71`, replays the EP1–4 ruby
+commits from `feat/japanese-ruby`, then adds EP5–8 fixes. EP1–4 remains on
+`feat/japanese-ruby`, based on `mod:ba457e4261f9876a707d12ee03fd22dc6b0a2478`.
+
+Why keep the EP5–8 base: the installed answer script calls custom commands such
+as `simul_lipall`, `simul_multfont`, `simul_nextld` and `simul_nextvoice`.
+`e06c6a2` registers and implements these; `ba457e4` does not. This demonstrates
+script-engine compatibility needs, not the provenance of the installed game
+executable.
 
 ## Local toolchain and pinned Python dependencies
 
@@ -43,7 +51,7 @@ engine and DLL as a pair; the old engine imports a different Steam API ABI.
 - Steam game directory: `<SteamLibrary>\steamapps\common\Umineko` (use the
   local Steam library path; do not hard-code a personal path into the repo).
 - The current script is the Korean review patch dated 2026-08-10. It contains
-  `langjp`, `langen`, `rubyon 17,17`, and
+  `langjp`, `langen`, `rubyon 17,17`, `simul_*` custom commands, and
   `*clear_text_and_save_backlog`; the header selects `mysav` with
   `;localsave mysav`.
 - `saveloc.txt` points to the game's `mysav` directory. `mysav` had saves
@@ -61,7 +69,7 @@ without modifying the installed script. Its report showed 375,656 lines,
 229,479 ruby groups, Korean dialogue unchanged, and a byte-identical round trip.
 Automatic readings still need contextual review.
 
-## 2026-11-14 local result
+## Previous 2026-11-14 local result
 
 - `./configure --steam && make -j2` succeeded in MSYS2 MINGW32. The resulting
   `src/ponscr.exe` is PE i386; its matching SDK DLL was staged alongside it.
@@ -72,3 +80,10 @@ Automatic readings still need contextual review.
   three files and launched; its window remained responsive. The current saves
   were backed up before replacement, and no save-file timestamps changed on
   launch.
+
+## Rebuild after branch replay
+
+On 2026-11-14 the replayed EP1–4 ruby commits plus EP5–8 fixes built successfully
+again in MSYS2 MINGW32 with `./configure --steam && make -j2`. The output is PE
+i386 and the matching Win32 Steam SDK DLL was staged. This rebuild has not yet
+been installed or runtime-checked in the game folder.

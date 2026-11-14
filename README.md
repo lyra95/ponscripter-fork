@@ -1,13 +1,12 @@
 > [!NOTE]
 > **이 포크에 대하여 — Yomigana**
 >
-> 이 저장소는 macOS에서 Steam판 **괭이갈매기 울 적에 EP1–4**의 일본어 대사 위에 요미가나(루비)를 표시하도록 Ponscripter 엔진을 수정한 포크입니다. 기존 한글 대사와 언어 전환 기능을 유지하면서 루비 출력, 대사 높이 검사, 기존 세이브 경로 호환성을 추가했습니다. 루비를 표시하려면 대사에도 `｜漢字《かんじ》` 형식의 독음 정보가 필요합니다.
+> 이 저장소는 EP1–4와 EP5–8의 Ponscripter 엔진에 같은 일본어 루비 파서와 그리기 구현을 적용합니다. EP1–4는 `feat/japanese-ruby`에서 원본 07th-Mod 기준 커밋 [`ba457e4`](https://github.com/07th-mod/ponscripter-fork/commit/ba457e4261f9876a707d12ee03fd22dc6b0a2478)을 사용합니다. Windows 답편 통합은 [`feat/japanese-ruby-ep5-8`](https://github.com/lyra95/ponscripter-fork/tree/feat/japanese-ruby-ep5-8)에서 진행하며, 답편 `0.u`가 호출하는 `simul_*` 명령을 보존하기 위해 `e06c6a2` 기준 위에 EP1–4 루비 커밋을 재적용하고 답편 보정을 더합니다. 이 기준 선택은 스크립트 호환성에 근거하며 설치 실행 파일의 출처를 뜻하지 않습니다.
 >
-> - **작업 브랜치:** [`feat/japanese-ruby`](https://github.com/lyra95/ponscripter-fork/tree/feat/japanese-ruby)
-> - **기준 브랜치(baseline):** 이 포크의 [`mod`](https://github.com/lyra95/ponscripter-fork/tree/mod). 원본 [`07th-mod/ponscripter-fork`의 `mod`](https://github.com/07th-mod/ponscripter-fork/tree/mod)에서 가져온 수정 전 코드입니다.
-> - **작업 시작 기준 커밋:** [`ba457e4`](https://github.com/07th-mod/ponscripter-fork/commit/ba457e4261f9876a707d12ee03fd22dc6b0a2478). 이후 변경 사항은 이 커밋을 기준으로 비교할 수 있습니다.
+> 루비 표기는 `｜漢字《かんじ》`입니다. 독음 변환 도구는 기존 한글 대사·언어 전환·명령을 보존하는 것을 목표로 합니다.
+>
 > - **다른 컴퓨터로 이관:** [Steam 설치 기준 가이드 및 Windows 작업 인계](docs/YOMIGANA.md)
-> - **Mac 바이너리:** [v0.1.0 초기 배포본](https://github.com/lyra95/ponscripter-fork/releases/tag/v0.1.0-macos-arm64) — arm64, macOS 26.0 이상. Windows 빌드는 아직 제공하지 않습니다.
+> - **Mac 바이너리:** [v0.1.0 초기 배포본](https://github.com/lyra95/ponscripter-fork/releases/tag/v0.1.0-macos-arm64) — EP1–4, arm64, macOS 26.0 이상.
 
 ## 루비 적용 전후
 

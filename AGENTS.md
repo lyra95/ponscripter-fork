@@ -1,8 +1,15 @@
 # Yomigana fork handoff
 
-Work on branch `feat/japanese-ruby` in `lyra95/ponscripter-fork`.
-The unchanged baseline is branch `mod`, commit
-`ba457e4261f9876a707d12ee03fd22dc6b0a2478`.
+This repository has two ruby work lines. EP1–4 uses branch
+`feat/japanese-ruby`, based on `mod:ba457e4261f9876a707d12ee03fd22dc6b0a2478`.
+The current Windows EP5–8 integration is `feat/japanese-ruby-ep5-8`: it starts
+from `e06c6a2f298f2e1036e7c5b8fd4b2571808f8f71`, then replays the EP1–4 ruby
+commits and adds answer-script fixes.
+
+The EP5–8 base is retained because the installed answer script calls custom
+`simul_*` commands implemented at `e06c6a2` but absent at `ba457e4`. This is
+evidence of an engine compatibility requirement; it does not establish which
+repository produced the installed executable.
 Read `docs/YOMIGANA.md` and `tools/yomigana/AGENTS.md` before continuing.
 
 ## What is preserved here
