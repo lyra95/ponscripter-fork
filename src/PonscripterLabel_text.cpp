@@ -632,13 +632,13 @@ int PonscripterLabel::processText()
             }
         }
         else if (clickstr_state == CLICK_WAIT) {
-            string_buffer_offset += file_encoding->NextCharSizeWithLigatures
+            string_buffer_offset += file_encoding->NextCharSize
                 (script_h.getStrBuf(string_buffer_offset), &sentence_font);
             clickstr_state = CLICK_NONE;
         }
         else if (clickstr_state == CLICK_NEWPAGE) {
             event_mode = IDLE_EVENT_MODE;
-            string_buffer_offset += file_encoding->NextCharSizeWithLigatures
+            string_buffer_offset += file_encoding->NextCharSize
                 (script_h.getStrBuf(string_buffer_offset), &sentence_font);
             newPage(true);
             clickstr_state = CLICK_NONE;
@@ -646,7 +646,7 @@ int PonscripterLabel::processText()
         }
         else
             string_buffer_offset +=
-                file_encoding->NextCharSizeWithLigatures
+                file_encoding->NextCharSize
                 (script_h.getStrBuf(string_buffer_offset), &sentence_font);
         event_mode = IDLE_EVENT_MODE;
     }
