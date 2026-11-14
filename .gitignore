@@ -99,6 +99,7 @@ Makefile*
 *.utf
 *.o
 *.d
+*.vers
 *.exe
 /Makefile
 /src/Makefile
