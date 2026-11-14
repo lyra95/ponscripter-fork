@@ -1,3 +1,12 @@
+> [!NOTE]
+> **이 포크에 대하여 — Yomigana**
+>
+> 이 저장소는 macOS에서 Steam판 **괭이갈매기 울 적에 EP1–4**의 일본어 대사 위에 요미가나(루비)를 표시하도록 Ponscripter 엔진을 수정한 포크입니다. 기존 한글 대사와 언어 전환 기능을 유지하면서 루비 출력, 대사 높이 검사, 기존 세이브 경로 호환성을 추가했습니다. 루비를 표시하려면 대사에도 `｜漢字《かんじ》` 형식의 독음 정보가 필요합니다.
+>
+> - **작업 브랜치:** [`feat/japanese-ruby`](https://github.com/lyra95/ponscripter-fork/tree/feat/japanese-ruby)
+> - **기준 브랜치(baseline):** 이 포크의 [`mod`](https://github.com/lyra95/ponscripter-fork/tree/mod). 원본 [`07th-mod/ponscripter-fork`의 `mod`](https://github.com/07th-mod/ponscripter-fork/tree/mod)에서 가져온 수정 전 코드입니다.
+> - **작업 시작 기준 커밋:** [`ba457e4`](https://github.com/07th-mod/ponscripter-fork/commit/ba457e4261f9876a707d12ee03fd22dc6b0a2478). 이후 변경 사항은 이 커밋을 기준으로 비교할 수 있습니다.
+
 # Ponscripter-fork (07th-mod)
 
 [![Build status](https://github.com/07th-mod/ponscripter-fork/workflows/Build/badge.svg)](../../actions)
