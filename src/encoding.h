@@ -29,6 +29,7 @@ typedef unsigned short wchar;
 #include <stack>
 #include "stdio.h"
 #include "pstring.h"
+#include "Ruby.h"
 class Fontinfo;
 
 // Style bits
@@ -62,7 +63,7 @@ public:
     bool UseTags() const { return tagscurr; }
 
     int NextCharSize(const char* str, const Fontinfo* fi = 0)
-	{ return Charsz_impl(str, fi); }
+	{ int ruby = parseRuby(str).bytes; return ruby ? ruby : Charsz_impl(str, fi); }
     int NextCharSizeWithLigatures(const char* str, const Fontinfo* fi)
 	{ return Charsz_impl(str, fi); }
 
