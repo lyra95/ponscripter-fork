@@ -1723,17 +1723,34 @@ void PonscripterLabel::flush(int refresh_mode, SDL_Rect* rect, bool clear_dirty_
 
 void PonscripterLabel::flushDirect(SDL_Rect &rect, int refresh_mode, bool updaterect)
 {
-    refreshSurface(accumulation_surface, &rect, refresh_mode);
+    SDL_Surface *surface = accumulation_surface;
+    if (!surface) return;
 
-    if(!updaterect) return;
+    // refreshSurface clips drawing itself. Its simul update can also expand
+    // dirty_rect.bounding_box, which rect may reference. Preserve that live
+    // reference through refresh, then clip the final rectangle for upload.
+    refreshSurface(surface, &rect, refresh_mode);
+    if (!updaterect || rect.w <= 0 || rect.h <= 0) return;
 
-    SDL_Rect r = rect;
-    if (r.w > accumulation_surface->w) r.w = accumulation_surface->w;
-    if (r.h > accumulation_surface->h) r.h = accumulation_surface->h;
-    char* px = (char *)accumulation_surface->pixels + accumulation_surface->pitch * r.y;
-    px += accumulation_surface->format->BytesPerPixel * r.x;
+    // Ruby glyphs can extend beyond the last visible text row. Clip all four
+    // edges before passing the update rectangle to SDL's renderer backend.
+    long long left = rect.x;
+    long long top = rect.y;
+    long long right = (long long)rect.x + rect.w;
+    long long bottom = (long long)rect.y + rect.h;
+    if (left < 0) left = 0;
+    if (top < 0) top = 0;
+    if (right > surface->w) right = surface->w;
+    if (bottom > surface->h) bottom = surface->h;
+    if (left >= right || top >= bottom) return;
+
+    SDL_Rect clipped = {
+        (int)left, (int)top, (int)(right - left), (int)(bottom - top)
+    };
+    char* px = (char *)surface->pixels + surface->pitch * clipped.y;
+    px += surface->format->BytesPerPixel * clipped.x;
     Uint64 begin = renderTimesFile ? SDL_GetPerformanceCounter() : 0;
-    if(SDL_UpdateTexture(screen_tex, &r, px, accumulation_surface->pitch)) {
+    if(SDL_UpdateTexture(screen_tex, &clipped, px, surface->pitch)) {
         fprintf(stderr,"Error updating texture: %s\n", SDL_GetError());
     }
     if (renderTimesFile) {
