@@ -161,6 +161,7 @@ public:
     int getreadlangCommand(const pstring& cmd);
     int showlangenCommand(const pstring& cmd);
     int showlangjpCommand(const pstring& cmd);
+    int rubyguardCommand(const pstring& cmd);
     int langenCommand(const pstring& cmd);
     int langjpCommand(const pstring& cmd);
     int langallCommand(const pstring& cmd);
@@ -679,6 +680,9 @@ private:
     int  textgosub_clickstr_state;
     int  indent_offset;
     int  line_enter_status; // 0 ... no enter, 1 ... pretext, 2 ... body
+    bool ruby_check_segment;
+    pstring ruby_pageguard_label;
+    bool rubySegmentFits(const char* text);
     int  global_speed_modifier;
     Glyph current_glyph;
 

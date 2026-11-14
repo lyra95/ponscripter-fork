@@ -759,6 +759,7 @@ int PonscripterLabel::sevolCommand(const pstring& cmd)
 
 void PonscripterLabel::DoSetwindow(PonscripterLabel::WindowDef& def)
 {
+    sentence_font.ruby_layout = true;
     sentence_font.top_x  = def.left;
     sentence_font.top_y  = def.top;
     sentence_font.area_x = def.width;
@@ -1739,6 +1740,7 @@ int PonscripterLabel::getreadlangCommand(const pstring& cmd)
 int PonscripterLabel::showlangenCommand(const pstring& cmd)
 {
     current_language = 0;
+    Fontinfo::ruby_japanese = false;
     //loadSaveFile(15);
     text_info.fill(0, 0, 0, 0);
     flush(refreshMode(), &sentence_font_info.pos);
@@ -1749,6 +1751,7 @@ int PonscripterLabel::showlangenCommand(const pstring& cmd)
 int PonscripterLabel::showlangjpCommand(const pstring& cmd)
 {
     current_language = 1;
+    Fontinfo::ruby_japanese = true;
     //loadSaveFile(15);
     text_info.fill(0, 0, 0, 0);
     flush(refreshMode(), &sentence_font_info.pos);
@@ -2230,7 +2233,7 @@ int PonscripterLabel::gettagCommand(const pstring& cmd)
     const char* buf = nest_infos.back().next_script;
     while (*buf == ' ' || *buf == '\t') buf++;
     int bytes;
-    if (zenkakko_flag && file_encoding->DecodeChar(buf, bytes) == 0x3010 /*y */)
+    if (zenkakko_flag && file_encoding->DecodeChar(buf, bytes) == 0x3010 /*ï¿½y */)
         buf += bytes;
     else if (*buf == '[')
         buf++;
@@ -2251,9 +2254,9 @@ int PonscripterLabel::gettagCommand(const pstring& cmd)
 	    int bytes = 1;
 	    while (*buf != '/' &&
 		   ((zenkakko_flag &&
-		     (file_encoding->DecodeChar(buf, bytes) != 0x3011 /* z*/)) ||
+		     (file_encoding->DecodeChar(buf, bytes) != 0x3011 /* ï¿½z*/)) ||
 		    (!zenkakko_flag &&
-             (file_encoding->DecodeChar(buf, bytes) != ']' /* z*/))))
+             (file_encoding->DecodeChar(buf, bytes) != ']' /* ï¿½z*/))))
 		buf += bytes;
 	    e.mutate(pstring(buf_start, buf - buf_start));
 	}
@@ -2264,7 +2267,7 @@ int PonscripterLabel::gettagCommand(const pstring& cmd)
     }
     while (more_args);
 
-    if (zenkakko_flag && file_encoding->DecodeChar(buf, bytes) == 0x3010 /*y */)
+    if (zenkakko_flag && file_encoding->DecodeChar(buf, bytes) == 0x3010 /*ï¿½y */)
 	buf += bytes;
     else if (*buf == ']') buf++;
 

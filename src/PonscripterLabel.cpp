@@ -201,6 +201,7 @@ sfunc_lut_t::sfunc_lut_t() {
     dict["gettextspeed"]     = &PonscripterLabel::gettextspeedCommand;
     //these "lang" cmds are for bilingual support for Umineko
     dict["langjp"]           = &PonscripterLabel::langjpCommand;
+    dict["rubyguard"]        = &PonscripterLabel::rubyguardCommand;
     dict["langen"]           = &PonscripterLabel::langenCommand;
     dict["langall"]          = &PonscripterLabel::langallCommand;
     dict["getreadlang"]      = &PonscripterLabel::getreadlangCommand;
@@ -1049,7 +1050,13 @@ pstring Platform_GetSavePath(const pstring& gameid)
 #endif
 
 pstring PonscripterLabel::getSavePath(const pstring gameid, const pstring& local_savedir) {
-#ifdef STEAM
+#ifdef LOCAL_SAVEDIR
+    // Preserve this installation's saves/ folder beside the app, including
+    // when Steam API support is enabled. Do not create a saveloc.txt file.
+    // The script's legacy ";localsave mysav" must not change this release's
+    // existing save location when switching from the original Mac engine.
+    return Local_GetSavePath("saves/");
+#elif defined(STEAM)
     return Steam_GetSavePath(local_savedir);
 #else
     #ifdef LOCAL_SAVEDIR
@@ -1386,6 +1393,7 @@ void PonscripterLabel::resetSub()
     textgosub_clickstr_state = CLICK_NONE;
     indent_offset = 0;
     line_enter_status = 0;
+    ruby_check_segment = false;
 
     resetSentenceFont();
 
@@ -1841,6 +1849,8 @@ int PonscripterLabel::parseLine()
     const wchar first_ch =
         file_encoding->DecodeWithLigatures(script_h.getStrBuf(string_buffer_offset),
                                       f, lf);
+    int ruby_bytes = parseRuby(script_h.getStrBuf(string_buffer_offset)).bytes;
+    if (ruby_bytes) lf = ruby_bytes;
 
     if (!isPreTextGoSub && is_break_char(first_ch) && !new_line_skip_flag) {
         int l;

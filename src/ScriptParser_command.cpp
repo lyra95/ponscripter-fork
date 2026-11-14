@@ -274,7 +274,7 @@ int ScriptParser::savedirCommand(const pstring& cmd)
 
 int ScriptParser::rubyonCommand(const pstring& cmd)
 {
-    // disabled
+    Fontinfo::ruby_enabled = true;
     const char* buf = script_h.getNext();
     if (buf[0] == 0x0a || buf[0] == ':' || buf[0] == ';') { }
     else {
@@ -292,7 +292,7 @@ int ScriptParser::rubyonCommand(const pstring& cmd)
 
 int ScriptParser::rubyoffCommand(const pstring& cmd)
 {
-    // disabled
+    Fontinfo::ruby_enabled = false;
     return RET_CONTINUE;
 }
 

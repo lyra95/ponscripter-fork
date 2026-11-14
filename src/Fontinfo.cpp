@@ -32,10 +32,13 @@
 #include "ScriptHandler.h"
 #include "resources.h"
 #include <math.h>
+#include <algorithm>
 
 int screen_ratio1 = 1, screen_ratio2 = 1;
 
 int Fontinfo::default_encoding = 0;
+bool Fontinfo::ruby_enabled = false;
+bool Fontinfo::ruby_japanese = false;
 
 static class FontsStruct {
     friend void MapFont(int, const pstring&);
@@ -203,6 +206,7 @@ Fontinfo::Fontinfo()
 
 void Fontinfo::reset()
 {
+    ruby_layout = false;
     is_vertical = false;
     is_bidirect = false;
     clear();
@@ -239,7 +243,7 @@ float Fontinfo::em_width()
 int Fontinfo::line_space()
 {
     doSize();
-    return font()->lineskip();
+    return font()->lineskip() + ruby_headroom();
 }
 
 
@@ -314,6 +318,21 @@ float Fontinfo::StringAdvance(const char* string)
     int   orig_mod = font_size_mod, orig_style = style, orig_y = pos_y;
     unicode = file_encoding->DecodeWithLigatures(string, *this, cb);
     while (*string) {
+        RubySpan ruby = parseRuby(string);
+        if (ruby.bytes) {
+            Fontinfo base = *this;
+            float width = base.StringAdvance(ruby.base.c_str());
+            if (ruby_enabled) {
+                Fontinfo reading = *this;
+                reading.set_mod_size(ruby_size());
+                reading.pitch_x = 0;
+                width = std::max(width, reading.StringAdvance(ruby.reading.c_str()));
+            }
+            pos_x += is_bidirect ? -width : width;
+            string += ruby.bytes;
+            unicode = file_encoding->DecodeWithLigatures(string, *this, cb);
+            continue;
+        }
         next = file_encoding->DecodeWithLigatures(string + cb, *this, nextcb);
         if (!processCode(string)) {
             if (is_bidirect)
