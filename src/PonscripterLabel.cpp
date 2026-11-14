@@ -201,6 +201,7 @@ sfunc_lut_t::sfunc_lut_t() {
     dict["gettextspeed"]     = &PonscripterLabel::gettextspeedCommand;
     //these "lang" cmds are for bilingual support for Umineko
     dict["langjp"]           = &PonscripterLabel::langjpCommand;
+    dict["rubyguard"]        = &PonscripterLabel::rubyguardCommand;
     dict["langen"]           = &PonscripterLabel::langenCommand;
     dict["langall"]          = &PonscripterLabel::langallCommand;
     dict["getreadlang"]      = &PonscripterLabel::getreadlangCommand;
@@ -1386,6 +1387,7 @@ void PonscripterLabel::resetSub()
     textgosub_clickstr_state = CLICK_NONE;
     indent_offset = 0;
     line_enter_status = 0;
+    ruby_check_segment = false;
 
     resetSentenceFont();
 
@@ -1841,6 +1843,8 @@ int PonscripterLabel::parseLine()
     const wchar first_ch =
         file_encoding->DecodeWithLigatures(script_h.getStrBuf(string_buffer_offset),
                                       f, lf);
+    int ruby_bytes = parseRuby(script_h.getStrBuf(string_buffer_offset)).bytes;
+    if (ruby_bytes) lf = ruby_bytes;
 
     if (!isPreTextGoSub && is_break_char(first_ch) && !new_line_skip_flag) {
         int l;

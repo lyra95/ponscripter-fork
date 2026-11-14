@@ -76,6 +76,7 @@ int PonscripterLabel::loadSaveFile2(SaveFileType file_type, int file_version)
     window_effect.anim.image_name = readStr(); // probably
 
     sentence_font.clear();
+    sentence_font.ruby_layout = true;
     sentence_font.top_x	 = readInt();
     sentence_font.top_y	 = readInt();
     sentence_font.area_x = readInt();
