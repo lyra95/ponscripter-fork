@@ -20,6 +20,14 @@ Read `docs/YOMIGANA.md` and `tools/yomigana/AGENTS.md` before continuing.
   live in `tools/yomigana/`. Game scripts, saves, game assets and SDK binaries
   are not tracked here. Mac binaries belong in GitHub Releases.
 
+Initial published binary: pre-release tag `v0.1.0-macos-arm64`, based on source
+commit `63b0e989eafebc91f0dbda0a97ec2df90fdaf754`. It contains the engine/libraries
+and portable tools, not an independent game or game assets. A fresh GitHub clone
+with a fresh venv passed all seven Python tests and the parser. The extracted
+release passed real full-script apply, bundled-app runtime, default save path,
+restart/load and restore checks. Personal recovery materials were exported
+outside the original workspace and are not in this repository.
+
 ## Development constraints
 
 The user intends to delete the original local workspace and continue from this

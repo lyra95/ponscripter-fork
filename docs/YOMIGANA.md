@@ -5,6 +5,11 @@
 브랜치, 시작 커밋은 `ba457e4261f9876a707d12ee03fd22dc6b0a2478`입니다.
 작업 및 기본 브랜치는 `feat/japanese-ruby`입니다.
 
+현재 Mac 배포본은 [v0.1.0-macos-arm64 (pre-release)](https://github.com/lyra95/ponscripter-fork/releases/tag/v0.1.0-macos-arm64)입니다.
+2026-11-14에 새 GitHub clone과 새 Python 가상환경에서 테스트 7개 및 독립 파서를
+확인했고, 배포 ZIP의 전체 스크립트 적용·Mac 실행·기본 저장 경로·재시작/로드·복원을
+검증했습니다. 기존 개인 작업 폴더가 필요한 설치 경로는 없습니다.
+
 ## 어디에 무엇을 보관하는가
 
 | 보관 위치 | 내용 |
