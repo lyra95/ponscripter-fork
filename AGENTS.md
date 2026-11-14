@@ -20,6 +20,10 @@ installed for EP1–4; startup was observed and the user reported it working.
   text-buffer/backlog preservation, skip/timing and page measurement are supported.
 - Ruby line spacing stays consistent across wait/voice segments and restored text;
   ordinary menus keep normal line spacing.
+- Text sprites, including `logsp` backlog pages, determine ruby headroom from
+  their own string. Do not inherit the live dialogue's ruby state: that clips
+  old-log readings after a plain page and shifts ordinary menu labels after a
+  ruby page. `test_backlog_runtime.py` compares both histories and ruby-off.
 - `rubyguard *clear_text_and_save_backlog` measures the next segment and calls
   the script callback if an existing page would overflow. It does not split
   an arbitrarily long single segment.

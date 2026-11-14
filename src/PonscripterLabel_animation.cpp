@@ -208,6 +208,13 @@ void PonscripterLabel::setupAnimationInfo(AnimationInfo* anim, Fontinfo* info)
         if (anim->skip_whitespace)
             anim->file_name = parseTags(anim->file_name);
 
+        // A text sprite is a separate layout. Inheriting the live dialogue's
+        // ruby state clips readings in old logs after a plain page, and moves
+        // ordinary menu labels down after a ruby page. Measure the actual
+        // sprite string before allocating its image, including multiline logs.
+        f_info.ruby_layout = Fontinfo::ruby_enabled && containsRuby(anim->file_name);
+        f_info.ruby_text_active = f_info.ruby_layout;
+
         if (anim->font_size_x >= 0) { // in case of Sprite, not rclick menu
             f_info.top_x = anim->pos.x * screen_ratio2 / screen_ratio1;
             f_info.top_y = anim->pos.y * screen_ratio2 / screen_ratio1;
