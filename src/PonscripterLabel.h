@@ -756,7 +756,7 @@ private:
         { /- for now -/ drawString(str, color, info, flush_flag,
 				   surface, rect, cache_info); }*/
 
-    void restoreTextBuffer();
+    void restoreTextBuffer(bool update_cursor = false);
     int  enterTextDisplayMode(bool text_flag = true);
     int  leaveTextDisplayMode(bool force_leave_flag = false);
     void doClickEnd();

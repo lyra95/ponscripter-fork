@@ -45,11 +45,14 @@ class Fontinfo {
     bool  is_vertical, is_bidirect;
 public:
     static int default_encoding;
-    static bool ruby_enabled, ruby_japanese;
-    bool ruby_layout;
+    static bool ruby_enabled;
+    bool ruby_layout, ruby_text_active;
     int ruby_size() const { return size() * 2 / 5 > 8 ? size() * 2 / 5 : 8; }
+    // Keep ordinary menus at normal line height. Ruby dialogue keeps this
+    // allocation across wait/voice segments and when its text is restored.
     int ruby_headroom() const {
-        return ruby_layout && ruby_enabled && ruby_japanese ? ruby_size() + 5 : 0;
+        return ruby_layout && ruby_text_active && ruby_enabled
+            ? ruby_size() + 5 : 0;
     }
 
     Font* font() const;

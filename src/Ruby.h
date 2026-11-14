@@ -35,4 +35,19 @@ inline RubySpan parseRuby(const char* text)
     }
     return span;
 }
+// Layout belongs to a dialogue/page, not to an individual @ wait segment.
+inline bool containsRuby(const char* text, bool stop_at_newline = false)
+{
+    for (const char* p = text; *p; ++p) {
+        if (stop_at_newline && *p == '\n') break;
+        if (parseRuby(p).bytes) return true;
+    }
+    return false;
+}
+
+inline bool scriptLineContainsRuby(const char* current, const char* script_begin)
+{
+    while (current > script_begin && current[-1] != '\n') --current;
+    return containsRuby(current, true);
+}
 #endif

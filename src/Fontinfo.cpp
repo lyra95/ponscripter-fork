@@ -38,7 +38,6 @@ int screen_ratio1 = 1, screen_ratio2 = 1;
 
 int Fontinfo::default_encoding = 0;
 bool Fontinfo::ruby_enabled = false;
-bool Fontinfo::ruby_japanese = false;
 
 static class FontsStruct {
     friend void MapFont(int, const pstring&);
@@ -207,6 +206,7 @@ Fontinfo::Fontinfo()
 void Fontinfo::reset()
 {
     ruby_layout = false;
+    ruby_text_active = false;
     is_vertical = false;
     is_bidirect = false;
     clear();

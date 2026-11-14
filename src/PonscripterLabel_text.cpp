@@ -328,7 +328,7 @@ PonscripterLabel::drawString(const char* str, rgb_t color, Fontinfo* info,
 }
 
 
-void PonscripterLabel::restoreTextBuffer()
+void PonscripterLabel::restoreTextBuffer(bool update_cursor)
 {
     text_info.fill(0, 0, 0, 0);
 
@@ -336,6 +336,9 @@ void PonscripterLabel::restoreTextBuffer()
     f_info.clear();
     const char* buffer = current_text_buffer[current_language]->contents;
     int buffer_count = current_text_buffer[current_language]->contents.length();
+    f_info.ruby_text_active = Fontinfo::ruby_enabled &&
+        (current_read_language == -1 || current_read_language == current_language) &&
+        (sentence_font.ruby_text_active || containsRuby(buffer));
 
     const wchar first_ch = file_encoding->DecodeWithLigatures(buffer, f_info);
     if (is_indent_char(first_ch)) f_info.SetIndent(first_ch);
@@ -344,12 +347,14 @@ void PonscripterLabel::restoreTextBuffer()
     while (i < buffer_count) {
         if (buffer[i] == 0x0a) {
             f_info.newLine();
-        ++i;
+            ++i;
         }
         else {
             i += drawChar(buffer + i, &f_info, false, false, NULL, &text_info);
         }
     }
+    if (update_cursor)
+        sentence_font.SetXY(f_info.GetXOffset(), f_info.GetYOffset());
 }
 
 
@@ -579,7 +584,22 @@ int PonscripterLabel::textCommand()
     int ret = enterTextDisplayMode();
     if (ret != RET_NOMATCH) return ret;
 
-    if (line_enter_status < 2) ruby_check_segment = true;
+    if (line_enter_status < 2) {
+        ruby_check_segment = true;
+        const char* buffer = current_text_buffer[current_language]->contents;
+        const bool ruby_active = Fontinfo::ruby_enabled &&
+            (current_read_language == -1 || current_read_language == current_language) &&
+            (containsRuby(buffer) || containsRuby(script_h.getStrBuf(0)) ||
+             scriptLineContainsRuby(script_h.getCurrent(), script_h.getAddress(0)));
+        const bool reflow = ruby_active && !sentence_font.ruby_text_active && *buffer;
+        sentence_font.ruby_text_active = ruby_active;
+        // A later ruby-bearing script line can promote an existing plain page.
+        // Rebuild its pixels and cursor together before drawing the next token.
+        if (reflow) {
+            restoreTextBuffer(true);
+            flush(refreshMode(), &sentence_font_info.pos);
+        }
+    }
     line_enter_status = 2;
     ret = processText();
     if (ret == RET_CONTINUE) {
