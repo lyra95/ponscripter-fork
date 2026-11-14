@@ -142,3 +142,4 @@ __pycache__/
 /release-output/
 /yomigana-backups/
 *.report.json
+/src/ponscr.rc
