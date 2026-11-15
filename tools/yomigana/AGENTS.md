@@ -37,6 +37,15 @@ Keep backups of the current engine, original script and current saves before
 applying changes. Do not restore historical saves over new progress during an
 engine update. Do not replace a running game or terminate it automatically.
 
+`fix_answer_backlog.py` corrects a pre-existing wrong Korean page-index reference
+in the answer script's two Japanese logsp calls. It preserves individual line
+lengths and all subsequent offsets by consuming two indentation spaces. Apply
+on a copy; no save migration for this correction alone. When combined with a
+ruby script migration, use equivalently patched source/target copies so the
+strict canonical comparison still permits only ruby/guard differences.
+`test_answer_backlog_runtime.py` explicitly tests the real copied script in
+both languages and ADV/NVL, with fresh empty saves and no loadgame call.
+
 Only engine binaries/libraries and portable tools belong in Mac release assets.
 Retain the user's app icon and game data locally through the installer. The Mac
 payload is arm64, ad-hoc signed, and requires the minimum macOS version recorded

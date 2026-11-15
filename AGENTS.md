@@ -44,6 +44,14 @@ installed for EP1–4; startup was observed and the user reported it working.
   Steam-connected or cross-computer sync test. Full-game validation remains
   outstanding.
 - The Mac SDK dylib path is `osx/libsteam_api.dylib`.
+- The bilingual answer script has a separate, pre-ruby bug: Japanese NVL/ADV
+  backlog logsp calls read the Korean page index. `fix_answer_backlog.py` fixes
+  only those two calls, consuming indentation to preserve every line length and
+  subsequent byte offset. No engine rebuild or save migration is needed for
+  this script-only correction. Full-script copied-app tests start with empty
+  saves: both Japanese modes recover and both Korean modes remain pixel-identical.
+  For later ruby offset migration, normalize both script copies with this patch
+  first; the migration tool intentionally rejects other command differences.
 - PNS 2.7 exists with both 1000 and 1001 serialized sprites. The upstream
   `7656bf49` capacity change did not version the format; using runtime capacity
   as the old save count silently shifts variables/backlogs. `SaveLayout.h`
