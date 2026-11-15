@@ -77,7 +77,7 @@ def backup_game(game, backup_parent):
     return backup
 
 
-def apply(game, release, backup_parent):
+def apply(game, release, backup_parent, legacy_sprites=None):
     game, release = game.resolve(), release.resolve()
     ensure_stopped(game)
     app = game / "Umineko1to4.app"
@@ -103,7 +103,7 @@ def apply(game, release, backup_parent):
         sources = {"0.u": converted}
         save_report = {}
         if (game / "saves").exists():
-            save_report = migrate_directory(game / "0.u", converted, game / "saves", temp / "saves")
+            save_report = migrate_directory(game / "0.u", converted, game / "saves", temp / "saves", legacy_sprites)
             sources["saves"] = temp / "saves"
         ensure_stopped(game)
         backup = backup_game(game, backup_parent)
@@ -122,7 +122,7 @@ def apply(game, release, backup_parent):
     print("Applied. Current save progress retained; stack offsets relocated. Backup:", backup)
 
 
-def restore(game, backup, backup_parent):
+def restore(game, backup, backup_parent, legacy_sprites=None, target_sprites=None):
     game, backup = game.resolve(), backup.resolve()
     ensure_stopped(game)
     manifest = json.loads((backup / "manifest.json").read_text(encoding="utf-8"))
@@ -134,7 +134,7 @@ def restore(game, backup, backup_parent):
         sources = {name: backup / name for name in manifest["restore_default"]}
         save_report = {}
         if (game / "saves").exists():
-            save_report = migrate_directory(game / "0.u", backup / "0.u", game / "saves", Path(temp) / "saves")
+            save_report = migrate_directory(game / "0.u", backup / "0.u", game / "saves", Path(temp) / "saves", legacy_sprites, target_sprites)
             sources["saves"] = Path(temp) / "saves"
         ensure_stopped(game)
         recovery = backup_game(game, backup_parent)
@@ -150,13 +150,17 @@ if __name__ == "__main__":
     parser.add_argument("--release-dir", type=Path)
     parser.add_argument("--backup-dir", type=Path)
     parser.add_argument("--restore", type=Path, help="Restore this backup, keeping current saves")
+    parser.add_argument("--legacy-sprites", type=int, choices=[1000, 1001],
+                        help="Sprite count of untagged saves, based on their writing engine")
+    parser.add_argument("--restore-sprites", type=int, choices=[1000, 1001],
+                        help="Saved sprite count supported by the engine being restored")
     args = parser.parse_args()
     if platform.system() != "Darwin":
         parser.error("This installer is for macOS; use annotate.py for Windows preparation")
     parent = args.backup_dir or args.game_dir.resolve().parent / "yomigana-backups"
     if args.restore:
-        restore(args.game_dir, args.restore, parent)
+        restore(args.game_dir, args.restore, parent, args.legacy_sprites, args.restore_sprites)
     else:
         if not args.release_dir:
             parser.error("--release-dir is required when applying a release")
-        apply(args.game_dir, args.release_dir, parent)
+        apply(args.game_dir, args.release_dir, parent, args.legacy_sprites)

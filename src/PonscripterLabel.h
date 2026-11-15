@@ -961,7 +961,7 @@ private:
     void saveMagicNumber(bool output_flag);
     int  saveSaveFile(int no, const char* savestr = NULL);
 
-    int  loadSaveFile2(SaveFileType file_type, int file_version);
+    int  loadSaveFile2(SaveFileType file_type, int file_version, int saved_sprites = MAX_SPRITE_NUM);
     void saveSaveFile2(bool output_flag);
 
     /* ---------------------------------------- */

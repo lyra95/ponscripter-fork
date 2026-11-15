@@ -5,16 +5,19 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from save_offsets import SaveMigration, ScriptOffsets, migrate_directory, stack_fields
+from save_offsets import (SaveMigration, ScriptOffsets, migrate_directory,
+                          stack_fields, SPRITE_TAG, saved_sprite_count, resize_sprite_table,
+                          sprite_block_reader)
 
 
-def make_save(entries=(), border=200):
+def make_save(entries=(), border=200, sprites=1001, tagged=True):
     def ints(*values):
         return struct.pack("<" + "i" * len(values), *values)
-    data = (b"PNS\x02\x07" + ints(1, 1, 0) + ints(*([0] * 7)) + b"\0\0" +
+    extension = ints(3, 0, SPRITE_TAG, sprites) if tagged else ints(1, 0)
+    data = (b"PNS\x02\x07" + ints(1) + extension + ints(*([0] * 7)) + b"\0\0" +
             ints(0, 0) + b"\0" + ints(*([0] * 8)) + b"\0" * 4 +
             ints(*([0] * 5)) + b"\0" + ints(*([0] * 6)) + b"\0" * 4 +
-            ints(*([0] * 12)) + (b"\0" + ints(0, 0, 0, 0, 0)) * 1001 +
+            ints(*([0] * 12)) + (b"\0" + ints(0, 0, 0, 0, 0)) * sprites +
             (ints(0) + b"\0") * border + ints(-len(entries)))
     for mode, address, extra in entries:
         data += ints(mode, address, *extra)
@@ -95,6 +98,34 @@ class SaveOffsetTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "symbolic"):
                 migrate_directory(old, new, saves, p / "output")
             self.assertEqual(outside.read_bytes(), make_save())
+
+    def test_old_sprite_counts_require_explicit_provenance(self):
+        address = ScriptOffsets(self.original).raw.index(b"end\n")
+        for count in [1000, 1001]:
+            data = make_save([(0, address, ())], sprites=count, tagged=False)
+            with self.assertRaisesRegex(ValueError, "legacy-sprites"):
+                SaveMigration(self.original, self.annotated).migrate(data)
+            result, changes = SaveMigration(self.original, self.annotated, count).migrate(data)
+            self.assertTrue(changes)
+            mapped = stack_fields(result, 200, count)[0][1]
+            self.assertEqual(ScriptOffsets(self.annotated).raw[mapped:mapped+4], b"end\n")
+
+    def test_resize_preserves_variables_and_stack_and_rejects_nonempty_extra(self):
+        address = ScriptOffsets(self.original).raw.index(b"end\n")
+        original = make_save([(0, address, ())], sprites=1000, tagged=False)
+        expanded = resize_sprite_table(original, 1001, 1000)
+        self.assertEqual(saved_sprite_count(expanded), 1001)
+        self.assertEqual(stack_fields(expanded, 200)[0][1], address)
+        restored = resize_sprite_table(expanded, 1000)
+        self.assertEqual(saved_sprite_count(restored), 1000)
+        # Only the optional descriptor differs from the original after a round trip.
+        self.assertEqual(restored[:9] + struct.pack("<i", 1) + restored[13:17] + restored[25:], original)
+        r = sprite_block_reader(expanded)
+        for _ in range(1000):
+            r.string(); r.skip(20)
+        nonempty = expanded[:r.pos] + b"image.png" + expanded[r.pos:]
+        with self.assertRaisesRegex(ValueError, "cannot discard"):
+            resize_sprite_table(nonempty, 1000)
 
 
 if __name__ == "__main__":

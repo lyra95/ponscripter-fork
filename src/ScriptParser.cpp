@@ -182,6 +182,7 @@ ScriptParser::ScriptParser()
     save_data_buf   = NULL;
     file_io_buf_ptr = 0;
     file_io_buf_len = 0;
+    file_io_read_len = 0;
     save_data_len   = 0;
 
     text_buffer = NULL;
@@ -594,6 +595,7 @@ int ScriptParser::saveFileIOBuf(const pstring& filename, int offset,
 
 int ScriptParser::loadFileIOBuf(const pstring& filename)
 {
+    file_io_read_len = 0;
     FILE* fp;
     bool usesavedir = true;
     if (filename == "envdata")
@@ -613,6 +615,7 @@ int ScriptParser::loadFileIOBuf(const pstring& filename)
     file_io_buf[len] = 0;
 
     if (ret != len) return -2;
+    file_io_read_len = len;
 
     return 0;
 }

@@ -25,6 +25,14 @@ Test default launches without `--root`, `--save` or `--script`, from cwd `/`, us
 a copied app layout with the real header and copied saves. Never run such tests
 against a user's live game directory.
 
+PNS version 2.7 alone does not identify its sprite count: legacy engines wrote
+1000 or 1001 entries. The current loader validates both complete layouts and
+new saves carry an optional count tag. Never reintroduce a fixed-count legacy
+load or migration. `save_offsets.py` needs `--legacy-sprites` for untagged files;
+do not guess for a mixed-origin save directory. An engine-only update leaves
+save bytes intact. Test actual old-format loading, variable values and backlog
+pixels, not just a save produced by the same engine being tested.
+
 Keep backups of the current engine, original script and current saves before
 applying changes. Do not restore historical saves over new progress during an
 engine update. Do not replace a running game or terminate it automatically.

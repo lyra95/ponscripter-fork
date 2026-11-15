@@ -44,6 +44,16 @@ installed for EP1–4; startup was observed and the user reported it working.
   Steam-connected or cross-computer sync test. Full-game validation remains
   outstanding.
 - The Mac SDK dylib path is `osx/libsteam_api.dylib`.
+- PNS 2.7 exists with both 1000 and 1001 serialized sprites. The upstream
+  `7656bf49` capacity change did not version the format; using runtime capacity
+  as the old save count silently shifts variables/backlogs. `SaveLayout.h`
+  validates the entire structure against the script's array size before loading
+  an untagged file, and rejects ambiguous/malformed files before state changes.
+  New files record the sprite count in the existing optional Pons extension.
+  Keep runtime capacity 1001; reading a 1000-entry file resets the absent slot.
+  This preserves intact old saves; it cannot reconstruct variables already
+  misread and re-saved by the broken loader. Keep those slots and reload an
+  intact earlier slot instead of overwriting progress automatically.
 
 ## Build and installation
 
@@ -67,6 +77,12 @@ or the save version. Mac apply/restore now performs this step transactionally.
 Do not remigrate saves already written against the target script. Mixed-origin
 legacy slots require identifying their source scripts separately; do not guess.
 Unsupported formats and TEXTGOSUB continuations on changed lines are rejected.
+The migration tool uses the count tag, or requires explicit `--legacy-sprites`
+for untagged saves: it cannot infer the writing engine from the PNS version.
+Do not assume all legacy files have 1001 entries. Restoring a 1000-sprite engine
+can use `--restore-sprites 1000` (CLI migration: `--target-sprites 1000`); it
+refuses to discard a nonempty extra slot. Loading old saves in the new engine
+does not require rewriting the old files or changing dialogue.
 The initial published Mac ZIP predates this fix. Engine-only updates with an
 unchanged script do not require save migration. See the explicit copied-app
 regression in `tools/yomigana/tests/test_save_migration_runtime.py`.

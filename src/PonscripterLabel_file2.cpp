@@ -24,8 +24,9 @@
  */
 
 #include "PonscripterLabel.h"
+#include "SaveLayout.h"
 
-int PonscripterLabel::loadSaveFile2(SaveFileType file_type, int file_version)
+int PonscripterLabel::loadSaveFile2(SaveFileType file_type, int file_version, int saved_sprites)
 {
     deleteNestInfo();
 
@@ -145,7 +146,7 @@ int PonscripterLabel::loadSaveFile2(SaveFileType file_type, int file_version)
 	readInt(); // -1
     }
     
-    for (i = 0; i < MAX_SPRITE_NUM; i++) {
+    for (i = 0; i < saved_sprites; i++) {
 	sprite_info[i].remove();
 	sprite_info[i].image_name = readStr();
 	if (sprite_info[i].image_name) {
@@ -166,6 +167,10 @@ int PonscripterLabel::loadSaveFile2(SaveFileType file_type, int file_version)
 	        trans = 256;
 	    sprite_info[i].trans = trans;
 	}
+    }
+    for (i = saved_sprites; i < MAX_SPRITE_NUM; ++i) {
+        sprite_info[i].reset();
+        simul_lip_lii[i] = -1;
     }
     readVariables(0, script_h.global_variable_border);
 
@@ -472,8 +477,10 @@ void PonscripterLabel::saveSaveFile2(bool output_flag)
     writeInt(1, output_flag);
 
     // Ponscripter additions
-    writeInt(1, output_flag);
+    writeInt(3, output_flag);
     writeInt(Fontinfo::default_encoding, output_flag);
+    writeInt(PnsLayout::SpriteTag, output_flag);
+    writeInt(MAX_SPRITE_NUM, output_flag);
     // End Ponscripter additions
     
     writeInt((sentence_font.is_bold ? 1 : 0), output_flag);

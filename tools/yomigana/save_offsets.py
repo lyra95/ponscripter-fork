@@ -15,7 +15,8 @@ import struct
 
 GUARD = b":rubyguard *clear_text_and_save_backlog"
 RUBY = re.compile("｜([^\\r\\n]*?)《([^\\r\\n]*?)》".encode())
-SPRITES = 1001  # PonscripterLabel.h, this fork's PNS 2.7 layout.
+SPRITES = 1001  # Current runtime capacity, not necessarily the saved count.
+SPRITE_TAG = 0x53505254
 
 
 class ScriptOffsets:
@@ -97,8 +98,8 @@ class Reader:
         self.pos = end + 1
 
 
-def stack_fields(data, border):
-    """Locate only stack fields; all other save bytes remain opaque/unchanged."""
+def saved_sprite_count(data, legacy_sprites=None):
+    """Old PNS 2.7 has no count: require provenance instead of guessing."""
     if not data.startswith(b"PNS\x02\x07"):
         raise ValueError("Save migration supports this fork's PNS 2.7 files only")
     r = Reader(data)
@@ -108,6 +109,20 @@ def stack_fields(data, border):
     extras = r.integer()
     if not 1 <= extras <= 1024:
         raise ValueError("Invalid PNS extension length")
+    values = [r.integer() for _ in range(extras)]
+    if extras >= 3 and values[1] == SPRITE_TAG:
+        if values[2] not in (1000, 1001):
+            raise ValueError("Unsupported tagged sprite count")
+        return values[2]
+    if legacy_sprites not in (1000, 1001):
+        raise ValueError("Untagged PNS 2.7 save: specify --legacy-sprites 1000 or 1001 from its engine provenance")
+    return legacy_sprites
+
+
+def sprite_block_reader(data):
+    r = Reader(data)
+    r.skip(9)
+    extras = r.integer()
     r.skip(extras * 4 + 7 * 4)
     r.string()  # Two cursor image names.
     r.string()
@@ -119,7 +134,14 @@ def stack_fields(data, border):
     for _ in range(4):
         r.string()  # Background + three standing images.
     r.skip(12 * 4)  # Standing positions and reserved fields.
-    for _ in range(SPRITES):
+    return r
+
+
+def stack_fields(data, border, legacy_sprites=None):
+    """Locate only stack fields; all other save bytes remain opaque/unchanged."""
+    sprites = saved_sprite_count(data, legacy_sprites)
+    r = sprite_block_reader(data)
+    for _ in range(sprites):
         r.string()
         r.skip(5 * 4)
     for _ in range(border):
@@ -146,7 +168,8 @@ def stack_fields(data, border):
 
 
 class SaveMigration:
-    def __init__(self, source_script, target_script):
+    def __init__(self, source_script, target_script, legacy_sprites=None):
+        self.legacy_sprites = legacy_sprites
         self.source, self.target = ScriptOffsets(source_script), ScriptOffsets(target_script)
         if self.source.canonical != self.target.canonical:
             raise ValueError("Scripts differ by more than ruby and the rubyguard directive")
@@ -158,7 +181,7 @@ class SaveMigration:
 
     def migrate(self, data):
         result, changes = bytearray(data), []
-        for position, address, mode in stack_fields(data, self.border):
+        for position, address, mode in stack_fields(data, self.border, self.legacy_sprites):
             mapped = self.target.from_canonical(self.source.to_canonical(address))
             # Runtime text tokens can expand variables/tags. Do not guess their
             # within-token offsets when the containing source line changed.
@@ -170,11 +193,41 @@ class SaveMigration:
         return bytes(result), changes
 
 
-def migrate_directory(source_script, target_script, saves, output):
+def resize_sprite_table(data, target, legacy_sprites=None):
+    """Restore an older engine only when the extra slot is genuinely empty."""
+    current = saved_sprite_count(data, legacy_sprites)
+    if target not in (1000, 1001):
+        raise ValueError("Unsupported target sprite count")
+    if current == target:
+        return data
+    r = sprite_block_reader(data)
+    for _ in range(1000):
+        r.string(); r.skip(20)
+    boundary = r.pos
+    if target == 1000:
+        name_start = r.pos; r.string()
+        values = [r.integer() for _ in range(5)]
+        if (data[name_start:r.pos-20] != b"\0" or values[:2] != [0, 0] or
+                values[2] not in (0, 2) or values[3] != 0 or values[4] not in (-1, 0, 256)):
+            raise ValueError("Sprite 1000 has saved state; cannot discard it for an older engine")
+        result = bytearray(data[:boundary] + data[r.pos:])
+    else:
+        empty = b"\0" + struct.pack("<iiiii", 0, 0, 2, 0, -1)
+        result = bytearray(data[:boundary] + empty + data[boundary:])
+    extras = struct.unpack_from("<i", result, 9)[0]
+    if extras >= 3 and struct.unpack_from("<i", result, 17)[0] == SPRITE_TAG:
+        struct.pack_into("<i", result, 21, target)
+    else:
+        result[17:17] = struct.pack("<ii", SPRITE_TAG, target)
+        struct.pack_into("<i", result, 9, extras + 2)
+    return bytes(result)
+
+
+def migrate_directory(source_script, target_script, saves, output, legacy_sprites=None, target_sprites=None):
     saves, output = Path(saves), Path(output)
     if output.exists() or saves.resolve() in output.resolve().parents:
         raise ValueError("Choose a new output directory outside the original saves")
-    migration = SaveMigration(Path(source_script).read_bytes(), Path(target_script).read_bytes())
+    migration = SaveMigration(Path(source_script).read_bytes(), Path(target_script).read_bytes(), legacy_sprites)
     # Validate every slot before creating output. Source files are never changed.
     for slot in saves.rglob("save*.dat"):
         if (re.fullmatch(r"save\d+\.dat", slot.name) and
@@ -186,7 +239,13 @@ def migrate_directory(source_script, target_script, saves, output):
             continue
         if slot.is_symlink():
             raise ValueError("Save slots must not be symbolic links")
-        converted[slot.name], report[slot.name] = migration.migrate(slot.read_bytes())
+        original = slot.read_bytes()
+        converted[slot.name], report[slot.name] = migration.migrate(original)
+        if target_sprites is not None:
+            count = saved_sprite_count(original, legacy_sprites)
+            converted[slot.name] = resize_sprite_table(converted[slot.name], target_sprites, legacy_sprites)
+            if count != target_sprites:
+                report[slot.name].append({"field": "sprite_count", "before": count, "after": target_sprites})
         secondary = saves / "sav" / slot.name
         if secondary.exists() and ((saves / "sav").is_symlink() or secondary.is_symlink() or
                                    secondary.read_bytes() != slot.read_bytes()[5:]):
@@ -210,5 +269,10 @@ if __name__ == "__main__":
     p.add_argument("--target-script", type=Path, required=True)
     p.add_argument("--saves", type=Path, required=True)
     p.add_argument("--output", type=Path, required=True)
+    p.add_argument("--legacy-sprites", type=int, choices=[1000, 1001],
+                   help="Saved sprite count for old untagged files; identify the writing engine first")
+    p.add_argument("--target-sprites", type=int, choices=[1000, 1001],
+                   help="Optional target engine layout; removal rejects any nonempty extra slot")
     args = p.parse_args()
-    print(json.dumps(migrate_directory(args.source_script, args.target_script, args.saves, args.output), indent=2))
+    print(json.dumps(migrate_directory(args.source_script, args.target_script, args.saves, args.output,
+                                       args.legacy_sprites, args.target_sprites), indent=2))

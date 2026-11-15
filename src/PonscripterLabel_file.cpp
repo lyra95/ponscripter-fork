@@ -24,6 +24,7 @@
  */
 
 #include "PonscripterLabel.h"
+#include "SaveLayout.h"
 
 #if defined (LINUX) || defined (MACOSX)
 #include <sys/types.h>
@@ -188,6 +189,19 @@ int PonscripterLabel::loadSaveFile(int no)
         return -1;
     }
 
+    if (file_type == Ponscripter && file_version == 207) {
+        size_t array_values = 0;
+        for (ScriptHandler::ArrayVariable::iterator a = script_h.arrays.begin();
+             a != script_h.arrays.end(); ++a)
+            array_values += a->second.end() - a->second.begin();
+        int sprites = PnsLayout::spriteCount(file_io_buf, file_io_read_len,
+                                            script_h.global_variable_border, array_values);
+        if (!sprites) {
+            fprintf(stderr, "Unsupported or ambiguous PNS 2.7 sprite layout; save was not loaded.\n");
+            return -1;
+        }
+        return loadSaveFile2(file_type, file_version, sprites);
+    }
     if (file_version >= 200)
         return loadSaveFile2(file_type, file_version);
 
