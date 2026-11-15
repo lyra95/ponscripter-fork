@@ -8,6 +8,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from save_offsets import (SaveMigration, ScriptOffsets, migrate_directory,
                           stack_fields, SPRITE_TAG, saved_sprite_count, resize_sprite_table,
                           sprite_block_reader)
+from fix_answer_backlog import patch as patch_backlog
+import test_answer_backlog
 
 
 def make_save(entries=(), border=200, sprites=1001, tagged=True):
@@ -62,6 +64,37 @@ class SaveOffsetTest(unittest.TestCase):
         self.assertEqual(b.from_canonical(0), 0)
         self.assertEqual(b.raw[b.from_canonical(len("漢字".encode())):], "次\n".encode())
         self.assertEqual(b.to_canonical(b.raw.index("次".encode())), a.raw.index("次".encode()))
+
+    def test_backlog_fix_allows_bidirectional_migration_without_rewriting_scripts(self):
+        for ending in [b"\r\n", b"\n"]:
+            fragment = test_answer_backlog.AnswerBacklogTest().script(ending)
+            original = self.original + fragment
+            annotated = self.annotated + fragment
+            corrected = patch_backlog(annotated)[0]
+            source = ScriptOffsets(original)
+            self.assertEqual(ScriptOffsets(corrected).raw,
+                             corrected.removeprefix(b"\xef\xbb\xbf").replace(b"\r\n", b"\n") + b"\n")
+            addresses = [source.raw.index(b"end\n"), source.raw.rindex(b"return\n")]
+            data = make_save([(0, addresses[0], ()), (1, addresses[1], (3, 10, 1))])
+            migrated, _ = SaveMigration(original, corrected).migrate(data)
+            target = ScriptOffsets(corrected)
+            for (_, mapped, _), address in zip(stack_fields(migrated, 200), addresses):
+                self.assertEqual(target.raw[mapped:mapped+6], source.raw[address:address+6])
+            restored, _ = SaveMigration(corrected, original).migrate(migrated)
+            self.assertEqual(restored, data)
+            # The correction by itself changes no stored return address.
+            self.assertEqual(SaveMigration(annotated, corrected).migrate(migrated), (migrated, []))
+
+    def test_backlog_normalization_does_not_permit_other_command_edits(self):
+        original = self.original + test_answer_backlog.AnswerBacklogTest().script()
+        corrected = patch_backlog(self.annotated + test_answer_backlog.AnswerBacklogTest().script())[0]
+        variants = [corrected.replace(b",190,736,", b",190,737,"),
+                    corrected.replace(b"$%jpbackloglook,274", b"$%otherlog,274"),
+                    corrected.replace(b" if %advMode ==", b"   if %advMode =="),
+                    corrected.replace(b"gosub *scene", b"goto *scene")]
+        for variant in variants:
+            with self.assertRaisesRegex(ValueError, "more than ruby"):
+                SaveMigration(original, variant)
 
     def test_copy_preserves_progress_and_rejects_all_before_output(self):
         with tempfile.TemporaryDirectory() as d:

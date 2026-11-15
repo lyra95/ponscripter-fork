@@ -14,6 +14,7 @@ import tempfile
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from annotate import convert
 from save_offsets import migrate_directory
+from fix_answer_backlog import patch as patch_backlog
 
 
 SCRIPT = """;value2500,modew540@2x@umineko
@@ -50,6 +51,11 @@ end
 *clear_text_and_save_backlog
 textclear
 return
+*text_cw_lookback2_jp
+   if %advMode == 0 logsp backlogtext,$%backloglook,274,32,#FFFFaa
+   if %advMode != 0 logsp backlogtext,$%backloglook,190,736,#FFFFaa
+*text_cw_lookback3
+return
 """
 
 
@@ -61,6 +67,9 @@ def run(app, fonts, offline_library=None):
         original, converted = game / "original.u", game / "converted.u"
         original.write_bytes(SCRIPT.replace("\n", "\r\n").encode("utf-8"))
         convert(original, converted, game / "conversion.json")
+        # The restored original retains its pre-correction commands. Exercise
+        # migration across both ruby insertion and the equal-byte backlog fix.
+        converted.write_bytes(patch_backlog(converted.read_bytes())[0])
         env = os.environ.copy()
         if offline_library:
             env["DYLD_INSERT_LIBRARIES"] = str(offline_library.resolve())
@@ -90,7 +99,7 @@ def run(app, fonts, offline_library=None):
             shutil.rmtree(game / "saves")
             output.rename(game / "saves")
             assert launch(target, True) == expected
-        print("PASS: original save -> ruby script -> original script; gosub and FOR return correctly")
+        print("PASS: original save -> ruby/backlog-corrected script -> original script; gosub and FOR return correctly")
 
 
 if __name__ == "__main__":

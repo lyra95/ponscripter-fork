@@ -12,6 +12,8 @@ import re
 import shutil
 import struct
 
+from fix_answer_backlog import patch as patch_answer_backlog
+
 
 GUARD = b":rubyguard *clear_text_and_save_backlog"
 RUBY = re.compile("｜([^\\r\\n]*?)《([^\\r\\n]*?)》".encode())
@@ -50,6 +52,14 @@ class ScriptOffsets:
             previous = end
         pieces.append(self.raw[previous:])
         self.canonical = b"".join(pieces)
+        # Compare the recognized equal-byte backlog correction symmetrically.
+        # Keep raw script bytes and the ruby offset map untouched: no caller or
+        # backup is rewritten, and TEXTGOSUB still checks the actual source line.
+        try:
+            self.canonical, _ = patch_answer_backlog(self.canonical)
+        except ValueError:
+            # Other scripts/layouts retain the exact command comparison.
+            pass
 
     def to_canonical(self, offset):
         if not 0 <= offset < len(self.raw):
@@ -172,7 +182,7 @@ class SaveMigration:
         self.legacy_sprites = legacy_sprites
         self.source, self.target = ScriptOffsets(source_script), ScriptOffsets(target_script)
         if self.source.canonical != self.target.canonical:
-            raise ValueError("Scripts differ by more than ruby and the rubyguard directive")
+            raise ValueError("Scripts differ by more than ruby, rubyguard and the known backlog correction")
         header = self.source.raw.split(b"*define", 1)[0]
         value = re.search(rb"(?:^;|,)value(\d+)", header)
         self.border = int(value[1]) if value else 200

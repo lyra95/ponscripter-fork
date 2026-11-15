@@ -10,6 +10,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from apply_macos import apply, restore, replace_targets
 from test_save_offsets import make_save
 from save_offsets import ScriptOffsets, stack_fields
+from fix_answer_backlog import patch as patch_backlog
+import test_answer_backlog
 
 
 class InstallerTest(unittest.TestCase):
@@ -91,6 +93,26 @@ class InstallerTest(unittest.TestCase):
                 apply(self.game, self.release, self.root / "backups")
         self.assertEqual((self.game / "0.u").read_bytes(), self.original)
         self.assertEqual((self.app / "Contents/MacOS/umineko4").read_bytes(), b"original engine")
+
+    def test_restore_after_backlog_correction_keeps_backup_and_current_progress(self):
+        self.original += test_answer_backlog.AnswerBacklogTest().script()
+        script, slot = self.game / "0.u", self.game / "saves/save1.dat"
+        script.write_bytes(self.original)
+        address = ScriptOffsets(self.original).raw.rindex(b"return\n")
+        data = make_save([(0, address, ()), (1, address, (3, 10, 1))])
+        slot.write_bytes(data)
+        with patch("apply_macos.ensure_stopped"), patch("apply_macos.platform.machine", return_value="arm64"), \
+                patch("apply_macos.platform.mac_ver", return_value=("26.0", (), "")):
+            apply(self.game, self.release, self.root / "backups")
+            backup = next((self.root / "backups").iterdir())
+            manifest = (backup / "manifest.json").read_bytes()
+            script.write_bytes(patch_backlog(script.read_bytes())[0])
+            slot.write_bytes(slot.read_bytes() + b"newer progress")
+            restore(self.game, backup, self.root / "recoveries")
+        self.assertEqual(script.read_bytes(), self.original)
+        self.assertEqual(slot.read_bytes(), data + b"newer progress")
+        self.assertEqual((backup / "0.u").read_bytes(), self.original)
+        self.assertEqual((backup / "manifest.json").read_bytes(), manifest)
 
     def test_partial_swap_rolls_back(self):
         import os

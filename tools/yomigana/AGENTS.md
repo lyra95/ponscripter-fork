@@ -40,9 +40,12 @@ engine update. Do not replace a running game or terminate it automatically.
 `fix_answer_backlog.py` corrects a pre-existing wrong Korean page-index reference
 in the answer script's two Japanese logsp calls. It preserves individual line
 lengths and all subsequent offsets by consuming two indentation spaces. Apply
-on a copy; no save migration for this correction alone. When combined with a
-ruby script migration, use equivalently patched source/target copies so the
-strict canonical comparison still permits only ruby/guard differences.
+on a copy; no save migration for this correction alone. The migration tool
+normalizes this exact equal-byte correction only in its canonical comparison,
+so patched and pre-patch scripts can be migrated/restored directly. Never
+rewrite backups or loosen comparison for other commands. Raw scripts/maps and
+the changed-line TEXTGOSUB check remain intact. The release must include
+fix_answer_backlog.py alongside save_offsets.py for the new import.
 `test_answer_backlog_runtime.py` explicitly tests the real copied script in
 both languages and ADV/NVL, with fresh empty saves and no loadgame call.
 

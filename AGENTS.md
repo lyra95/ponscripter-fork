@@ -50,8 +50,10 @@ installed for EP1–4; startup was observed and the user reported it working.
   subsequent byte offset. No engine rebuild or save migration is needed for
   this script-only correction. Full-script copied-app tests start with empty
   saves: both Japanese modes recover and both Korean modes remain pixel-identical.
-  For later ruby offset migration, normalize both script copies with this patch
-  first; the migration tool intentionally rejects other command differences.
+  Migration normalizes only this recognized equal-byte correction in its
+  comparison view; raw script/backup bytes and ruby offset maps are untouched.
+  Other command differences and changed-line TEXTGOSUB remain rejected. Include
+  fix_answer_backlog.py with save_offsets.py in portable release tools.
 - PNS 2.7 exists with both 1000 and 1001 serialized sprites. The upstream
   `7656bf49` capacity change did not version the format; using runtime capacity
   as the old save count silently shifts variables/backlogs. `SaveLayout.h`
