@@ -9,7 +9,8 @@ import urllib.request
 REPOSITORY = "rlabrecque/SteamworksSDK"
 REVISION = "df2baabf574a738ef1ea90a7e89339107fc0a279"
 BINARIES = {"macos": "osx/libsteam_api.dylib", "win32": "steam_api.dll",
-            "win64": "win64/steam_api64.dll"}
+            "win64": "win64/steam_api64.dll",
+            "linux64": "linux64/libsteam_api.so"}
 
 
 def fetch(destination, target):
@@ -38,7 +39,7 @@ def fetch(destination, target):
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--platform", choices=["headers", "macos", "win32", "win64"], default="headers")
+    p.add_argument("--platform", choices=["headers", "macos", "win32", "win64", "linux64"], default="headers")
     p.add_argument("--destination", type=Path,
                    default=Path(__file__).resolve().parents[2] / "src/extlib/src/steam-sdk")
     args = p.parse_args()

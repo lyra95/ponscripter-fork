@@ -6,6 +6,7 @@
 > 루비 표기는 `｜漢字《かんじ》`입니다. 독음 변환 도구는 기존 한글 대사·언어 전환·명령을 보존하는 것을 목표로 합니다.
 >
 > - **다른 컴퓨터로 이관:** [Steam 설치 기준 가이드 및 Windows 작업 인계](docs/YOMIGANA.md)
+> - **Steam Deck Linux 개발 환경:** [Steam Runtime Sniper 컨테이너 설정과 빌드 안내](docs/LINUX_BUILD.md)
 > - **Mac 바이너리(초기 문제편 소스 기반, 현재 Windows 브랜치와 별도):** [v0.1.0 초기 배포본](https://github.com/lyra95/ponscripter-fork/releases/tag/v0.1.0-macos-arm64) — EP1–4, arm64, macOS 26.0 이상.
 
 ## 루비 적용 전후

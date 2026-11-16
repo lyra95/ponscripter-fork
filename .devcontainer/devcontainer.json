@@ -1,0 +1,44 @@
+{
+  "name": "Ponscripter Steam Runtime Sniper",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "workspaceFolder": "/workspaces/ponscripter-fork",
+  "remoteUser": "root",
+  "containerEnv": {
+    "CMAKE_GENERATOR": "Ninja",
+    "SMPEG2_PATH": "/opt/ponscripter-deps",
+    "STEAM_SDK_ROOT": "/opt/steamworks-sdk",
+    "UV_PROJECT_ENVIRONMENT": "/opt/venvs/ponscripter-yomigana",
+    "UV_CACHE_DIR": "/opt/uv-cache"
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "shutdownAction": "stopContainer",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools"
+      ],
+      "settings": {
+        "cmake.configureOnOpen": false,
+        "cmake.configureArgs": [
+          "-Wno-dev"
+        ],
+        "cmake.generator": "Ninja",
+        "cmake.buildDirectory": "${workspaceFolder}/build/linux",
+        "cmake.configureSettings": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_STANDARD": "11",
+          "CMAKE_CXX_FLAGS": "-Wno-narrowing",
+          "SMPEG2_PATH": "/opt/ponscripter-deps",
+          "STEAM_SDK_ROOT": "/opt/steamworks-sdk",
+          "USE_CPU_GFX": "OFF",
+          "USE_STEAM": "ON"
+        },
+        "cmake.parallelJobs": 2
+      }
+    }
+  }
+}
