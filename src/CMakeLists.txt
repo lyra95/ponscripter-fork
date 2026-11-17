@@ -135,6 +135,7 @@ elseif (UNIX AND NOT APPLE)
 	target_compile_definitions(ponscr
 		PRIVATE
 			LINUX
+			LOCAL_SAVEDIR
 			USE_OGG_VORBIS)
 endif ()
 

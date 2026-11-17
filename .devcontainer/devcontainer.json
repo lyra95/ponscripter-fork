@@ -32,6 +32,8 @@
           "CMAKE_BUILD_TYPE": "RelWithDebInfo",
           "CMAKE_CXX_STANDARD": "11",
           "CMAKE_CXX_FLAGS": "-Wno-narrowing",
+          "CMAKE_BUILD_WITH_INSTALL_RPATH": "ON",
+          "CMAKE_INSTALL_RPATH": "$ORIGIN/lib64",
           "SMPEG2_PATH": "/opt/ponscripter-deps",
           "STEAM_SDK_ROOT": "/opt/steamworks-sdk",
           "USE_CPU_GFX": "OFF",
